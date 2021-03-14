@@ -293,7 +293,7 @@ def WriteFile(path, data):
 
     # TODO Data should be decoded here
 
-    f = open(path, "a")
+    f = open(path, "w")
 
     f.write(data)
 
