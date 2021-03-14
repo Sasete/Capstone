@@ -1,4 +1,5 @@
 import tkinter
+import ReaderWriter as Stocker
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -98,6 +99,10 @@ itemList.pack()
 s_height= 100
 s_width = 200
 
+# Canvas alani
+rightSideFrame = tkinter.Frame(main, bg = themeColor)
+rightSideFrame.pack(side = tkinter.RIGHT, fill = tkinter.Y)
+
 # kenar alani (tuslarin alani)
 sideFrame = tkinter.Frame(main, bg = themeColor, height = s_height, width = s_width)
 sideFrame.pack(side = tkinter.RIGHT , fill = tkinter.Y)
@@ -138,10 +143,29 @@ valueLabel.pack()
 StartButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Start", font = 24, width = 10, height = 2, command = Start)
 StartButton.pack(side = tkinter.TOP)
 
+# Canvas grafikler için
+canvas = tkinter.Canvas(rightSideFrame, bg = themeColor)
+canvas.pack()
+
 # Portfolio itemlarini basladigin gibi çek
 GetPortfolioItems()
 
 
-        
+
+# Stocker olarak yüklenen modülün kullanım örneği
+portfolio = Stocker.Portfolio("My Portfolio")
+
+portfolio.Load("./")
+
+portfolio.Save("./", "EncodedPortfolio")
+
+print(portfolio.stockDatas[0].name + " " + str(portfolio.stockDatas[0].amount))
+
+stock = Stocker.Stock("TSL")
+
+stock.Load("./")
+stock.Save("./", "EncodedStock")
+
+print(stock.stockDates[1].infos[0])
         
     
