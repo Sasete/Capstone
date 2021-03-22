@@ -75,6 +75,34 @@ m_width = 200
 sideSpace = 50
 topBottomSpace = 125
 
+# menu ekleme alanı
+Menu = tkinter.Menu(main)
+main.config(menu = Menu)
+
+fileMenu = tkinter.Menu(Menu, tearoff = 0)
+Menu.add_cascade(label = "Files", menu = fileMenu)
+fileMenu.add_command(label = "New")
+fileMenu.add_command(label = "Open")
+fileMenu.add_separator()   #cizgi olusturuyor
+fileMenu.add_command(label = "Save")
+
+
+editMenu = tkinter.Menu(Menu, tearoff = 0)
+Menu.add_cascade(label = "Edit", menu = editMenu)
+#editMenu.add_command(label = "")
+#editMenu.add_command(label = "")
+#editMenu.add_separator()   #cizgi olusturuyor
+#editMenu.add_command(label = "")
+
+algorithmMenu = tkinter.Menu(Menu, tearoff = 0)
+Menu.add_cascade(label = "Algorithm", menu = algorithmMenu)
+#algorithmMenu.add_command(label = "")
+#algorithmMenu.add_command(label = "")
+#algorithmMenu.add_separator()   #cizgi olusturuyor
+#algorithmMenu.add_command(label = "")
+
+
+
 # arayüzün tamami
 mainFrame = tkinter.Frame(main, bg = themeColor, height = m_height, width = m_width)
 mainFrame.pack(side = tkinter.LEFT, fill = tkinter.Y)
@@ -92,7 +120,7 @@ scrollbar = tkinter.Scrollbar(mainFrame)
 scrollbar.pack(side = tkinter.LEFT, fill = tkinter.Y)
 
 # item larin listelenecegi yer
-itemList = tkinter.Listbox(mainFrame, bg = themeColor, width = 30,font = 20, height = 10, yscrollcommand = scrollbar.set, justify = tkinter.CENTER)
+itemList = tkinter.Listbox(mainFrame, bg = themeColor, width = 30,font = 20, height = 21, yscrollcommand = scrollbar.set, justify = tkinter.CENTER)
 itemList.pack()
 
 # kenar alani için arayüz boyutlari
@@ -103,17 +131,20 @@ s_width = 200
 rightSideFrame = tkinter.Frame(main, bg = themeColor)
 rightSideFrame.pack(side = tkinter.RIGHT, fill = tkinter.Y)
 
+canvasLabel = tkinter.Label(rightSideFrame, bg = themeColor, fg = userColor, font = 24, text = "Current Date")
+canvasLabel.pack(side = tkinter.TOP, fill = tkinter.X)
+
 # kenar alani (tuslarin alani)
 sideFrame = tkinter.Frame(main, bg = themeColor, height = s_height, width = s_width)
 sideFrame.pack(side = tkinter.RIGHT , fill = tkinter.Y)
 
 # iki alani bölecek olan renk katmani
-divider = tkinter.Frame(main, bg = "black", height = s_height, width = 2)
-divider.pack(side = tkinter.RIGHT, fill = tkinter.Y)
+#divider = tkinter.Frame(main, bg = "black", height = s_height, width = 2)
+#divider.pack(side = tkinter.RIGHT, fill = tkinter.Y)
 
 #item alanina gelecek placeholder texti ve item text ini
 itemName = tkinter.StringVar()
-itemName.set('Item Shortcut')
+itemName.set('Item Shortcut')  
 
 # deger gösterilmesi için veriye ataniyor
 valueText = tkinter.StringVar()
@@ -123,28 +154,32 @@ valueText.set('Value: ' + GetValue())
 EntryField = tkinter.Entry(sideFrame, bg = themeColor, fg = userColor, font = 24, textvariable = itemName, justify = tkinter.CENTER)
 EntryField.pack(side = tkinter.TOP)
 
-# item ekleme tusu
-addItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Add Item", font = 24, width = 10, height = 2, command = AddItem)
+buttonFrame = tkinter.Frame(sideFrame, bg = themeColor, height = 80, width = s_width )
+buttonFrame.pack(side = tkinter.TOP , fill = tkinter.X)
+
+
+# item ekleme tusu   
+addItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Add Item", font = 24, width = 15, height = 3, command = AddItem)
 addItemButton.pack(side = tkinter.TOP)
 
-# item düzenleme tusu
-editItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Edit Item", font = 24, width = 10, height = 2, command = EditItem)
+# item düzenleme tusu   
+editItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Edit Item", font = 24, width = 15, height = 3, command = EditItem)
 editItemButton.pack(side = tkinter.TOP)
 
-# item silme tusu
-removeItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Remove Item", font = 24, width = 10, height = 2, command = RemoveItem)
+# item silme tusu     
+removeItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Remove Item", font = 24, width = 15, height = 3, command = RemoveItem)
 removeItemButton.pack(side = tkinter.TOP)
 
-# degeri gösterecek olan alan
+# degeri gösterecek olan alan 
 valueLabel = tkinter.Label(titleFrame, bg = themeColor, fg = userColor, font = 18, text = valueText.get())
 valueLabel.pack()
 
 # baslat tusu
-StartButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Start", font = 24, width = 10, height = 2, command = Start)
+StartButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Start", font = 24, width = 15, height = 3, command = Start)
 StartButton.pack(side = tkinter.TOP)
 
 # Canvas grafikler için
-canvas = tkinter.Canvas(rightSideFrame, bg = themeColor)
+canvas = tkinter.Canvas(rightSideFrame, bg = themeColor, height = 500, width = 800)
 canvas.pack()
 
 # Portfolio itemlarini basladigin gibi çek
