@@ -1,15 +1,51 @@
 import tkinter
 import ReaderWriter as Stocker
+from tkinter import filedialog
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
 
+
+portfolio = Stocker.Portfolio('')
+
+# dosya çalışmaları için fonksiyonlar oluşturuluyor
+def OpenFile():
+    
+    filetypes = [ ('Portfolio Files', '*.portfolio') ]
+    path = tkinter.filedialog.askopenfilename(title = "openFile", initialdir = './', filetypes = filetypes)
+    fileName = path.split('/')[-1]    
+    path = path[:len(path) - len(fileName)]
+
+
+    extention = fileName.split('.')[-1]
+    fileName = fileName[:len(fileName) - (len(extention)+1)]
+
+    global portfolio
+
+    portfolio.Load(path, fileName)
+
+    
+
+def SaveFile():
+
+    path = asksaveasfile(mode='w')
+    saveText = "merhaba dünya"
+    path.write(saveText)
+    path.close()
+
+
 # portfolio daki itemlari listeye listeleyecek fonksiyon
 def GetPortfolioItems():
 
-    itemList.insert(tkinter.END, "TSLA")
-    itemList.insert(tkinter.END, "MSFL")
-    itemList.insert(tkinter.END, "MCRSFT")
+    # portfolio dosyası seçtirip, içindeki veriyi global deki portfolio ya atıyoruz.
+    OpenFile()
+
+    # burada PortfolioToUI() çalışması gerek. Şimdilik sadece stockları yerine koyuyor.
+    for stockData in portfolio.stockDatas:
+
+        itemList.insert(tkinter.END, stockData.name)
+
+
 
 # portfolio nun toplam degerini hesaplayacak fonksiyon
 def CalculateValue():
@@ -24,7 +60,10 @@ def AddItem():
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
 
-    null
+    Stocker.WriteFile('./Temp.txt', itemList.get(tkinter.ACTIVE))
+
+    Stocker.Open('./Stock.py')
+    
 
 # listedeki seçili item i portfolio dan çikaracak olan fonksiyon 
 def RemoveItem():
@@ -49,6 +88,19 @@ def Start():
         isWorking = True
         StartButton.config(text = "Stop")
 
+
+
+
+
+def UIToPortfolio():
+
+
+
+    null
+
+def PortfolioToUI():
+
+    null
 
 
     print(isWorking)
@@ -188,19 +240,20 @@ GetPortfolioItems()
 
 
 # Stocker olarak yüklenen modülün kullanım örneği
-portfolio = Stocker.Portfolio("My Portfolio")
+#portfolio = Stocker.Portfolio("My Portfolio")
 
-portfolio.Load("./")
+#portfolio.Load("./")
 
-portfolio.Save("./", "EncodedPortfolio")
+#portfolio.Save("./", "EncodedPortfolio")
 
-print(portfolio.stockDatas[0].name + " " + str(portfolio.stockDatas[0].amount))
+#print(portfolio.stockDatas[0].name + " " + str(portfolio.stockDatas[0].amount))
 
-stock = Stocker.Stock("TSL")
+#stock = Stocker.Stock("TSL")
 
-stock.Load("./")
-stock.Save("./", "EncodedStock")
+#stock.Load("./")
+#stock.Save("./", "EncodedStock")
 
-print(stock.stockDates[1].infos[0])
-        
+#print(stock.stockDates[1].infos[0])
+
+tkinter.mainloop()
     

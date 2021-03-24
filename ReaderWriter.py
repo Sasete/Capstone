@@ -1,4 +1,5 @@
 import base64
+from subprocess import Popen
 
 # Portfolio sınıfı
 class Portfolio:
@@ -201,6 +202,8 @@ class Stock:
         # veriyi oku
         data = ReadFile(path)
 
+        print(data)
+
         # order önemli
         # order == 0 name, order == 1 stock data lar
         order = 0
@@ -209,7 +212,7 @@ class Stock:
 
             if order == 0:
 
-                # date name i yaz
+                # name i yaz
                 self.name = info
                 
                 order += 1
@@ -217,6 +220,8 @@ class Stock:
 
             if order == 1:
                 # her bir stock datasını yazmak için loop a gir
+
+
                 for stockDat in info.split(';'):
 
                     # eger stock boş ise, bitir
@@ -225,9 +230,15 @@ class Stock:
                     # stock sınıfını yarat
                     stockDate = StockDateData()
                     # date i sınıfa al
-                    stockDate.date = info.split(':')[0]
+                    stockDate.date = stockDat.split(':')[0]
                     # infolar için loop a gir
-                    for stockInfo in info.split(':')[1].split(','):
+                    
+                    infos = stockDat.split(':')[1]
+
+                    print(infos)
+                    
+                    for stockInfo in infos.split(','):
+                        print(stockDate.date + ":" + stockInfo)
                         # info yu sınıfa yaz
                         stockDate.infos.append(stockInfo)
                         
@@ -276,6 +287,9 @@ class StockDateData:
     def __init__(self):
 
         date = ""
+
+        infos = []
+            
         
 # Dosya okumak için
 def ReadFile(path):
@@ -300,5 +314,6 @@ def WriteFile(path, data):
     f.close()
 
 
-
+def Open(path):
+    Popen('py ' + path)
 

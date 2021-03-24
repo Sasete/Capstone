@@ -2,6 +2,8 @@ import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
 
+stock = Stocker.Stock('')
+
 # degeri arayüz için alan fonksiyon
 def GetValue():
 
@@ -39,10 +41,51 @@ def Start():
 
     print("Start fonksiyonu aktif")
 
+    # temp dosyasından stock un adını okuduk.
+    stringValue = Stocker.ReadFile('./Temp.txt')
+
+    global stock
+
+
+    stock = Stocker.Stock(stringValue)
+
+    stock.Load('./')
+    
+    for date in stock.stockDates:
+    
+        print(date.date)
+
+        for info in date.infos:
+
+            print(info)
+
+    # ./Temp.txt yi sil
+
+    stock.Save('./')
+
+    StockToUI()
+
+def UIToStock():
 
 
 
+    null
 
+def StockToUI():
+
+    global stock
+
+
+    nameText.set(stock.name)
+    valueText.set(stock.stockDates[len(stock.stockDates) - 1].infos[0])
+    dateText.set(stock.stockDates[len(stock.stockDates) - 1].date)
+
+
+
+    nameLabel.config(text = nameText.get())
+    valueLabel.config(text = valueText.get())
+    dateLabel.config(text = dateText.get())
+    
 
 
 
@@ -199,7 +242,7 @@ Start()
 #sys.exit(0)
 
 
-
+tkinter.mainloop()
 
 
 
