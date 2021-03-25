@@ -1,5 +1,6 @@
 import base64
 from subprocess import Popen
+import pickle
 
 # Portfolio sınıfı
 class Portfolio:
@@ -221,31 +222,45 @@ class Stock:
             if order == 1:
                 # her bir stock datasını yazmak için loop a gir
 
+                # bir list yarat stockdata lar için
+                stockDateList = [None] * len(info.split(';'))
 
+                orderMin = 0
                 for stockDat in info.split(';'):
 
                     # eger stock boş ise, bitir
                     if not stockDat:
                         break
-                    # stock sınıfını yarat
-                    stockDate = StockDateData()
-                    # date i sınıfa al
-                    stockDate.date = stockDat.split(':')[0]
+                    # stock sınıfını listedeki konumuna yarat
+                    # TODO burada instance yaratmalı, önceki objeyi degil.
+                    stockDateList[orderMin] = StockDateData()
+                    # date i listedeki sınıfa al
+                    stockDateList[orderMin].date = stockDat.split(':')[0]
                     # infolar için loop a gir
-                    
+                    stockDateList[orderMin].infos.clear()
                     infos = stockDat.split(':')[1]
 
                     print(infos)
                     
                     for stockInfo in infos.split(','):
-                        print(stockDate.date + ":" + stockInfo)
+                        print(stockDateList[orderMin].date + ":" + stockInfo)
                         # info yu sınıfa yaz
-                        stockDate.infos.append(stockInfo)
+                        stockDateList[orderMin].infos.append(stockInfo)
                         
                     # stockDate datalasını Stock data ya koy
-                    self.stockDates.append(stockDate)
+
+                    self.stockDates.clear()
+                    self.stockDates.extend(stockDateList)
+                    
+                    
+                    orderMin += 1
                     
                 order += 1
+
+                for obj in stockDateList:
+
+                    print(obj)
+                    
                 continue
 
         
@@ -287,8 +302,6 @@ class StockDateData:
     def __init__(self):
 
         date = ""
-
-        infos = []
             
         
 # Dosya okumak için
