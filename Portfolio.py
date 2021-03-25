@@ -8,6 +8,10 @@ isWorking = False
 
 portfolio = Stocker.Portfolio('')
 
+def Start():
+
+    OpenFile()
+    
 # dosya çalışmaları için fonksiyonlar oluşturuluyor
 def OpenFile():
     
@@ -22,35 +26,91 @@ def OpenFile():
 
     global portfolio
 
-    portfolio.Load(path, fileName)
+    # TODO SHOULD INITIALIZE PORTFOLIO
 
+    portfolio.name = fileName
+
+    portfolio.Load(path)
+    
+    PortfolioToUI()
     
 
 def SaveFile():
 
-    path = asksaveasfile(mode='w')
-    saveText = "merhaba dünya"
-    path.write(saveText)
-    path.close()
+    print("Saved File!")
 
+    return
+
+    # TODO SHOULD SAVE FILE
+    path = tkinter.filedialog.asksaveasfile(mode='w')
+    fileName = path.split('/')[-1]    
+    path = path[:len(path) - len(fileName)]
+
+
+    extention = fileName.split('.')[-1]
+    fileName = fileName[:len(fileName) - (len(extention)+1)]
+
+    global portfolio
+
+    portfolio.Save(path, fileName)
+
+
+def UIToPortfolio():
+
+    null
+
+def PortfolioToUI():
+
+    global portfolio
+
+    print(portfolio.name)
+
+    main.title(portfolio.name)
+
+    canvasLabel.config(text = portfolio.date)
+
+    GetPortfolioItems()
+
+    value = CalculateValue()
+
+    valueLabel.config(text = str(value))
 
 # portfolio daki itemlari listeye listeleyecek fonksiyon
 def GetPortfolioItems():
 
-    # portfolio dosyası seçtirip, içindeki veriyi global deki portfolio ya atıyoruz.
-    OpenFile()
+    global portfolio
 
     # burada PortfolioToUI() çalışması gerek. Şimdilik sadece stockları yerine koyuyor.
     for stockData in portfolio.stockDatas:
 
-        itemList.insert(tkinter.END, stockData.name)
+        itemList.insert(tkinter.END, stockData.name + '\tx' + str(stockData.amount))
 
 
 
 # portfolio nun toplam degerini hesaplayacak fonksiyon
 def CalculateValue():
 
-    null
+    global portfolio
+
+    value= 0
+    
+    order = 0
+    for stockData in portfolio.stockDatas:
+
+        stock = Stocker.Stock(stockData.name)
+
+        stock.Load('./Resources/Stocks/')
+
+        stock.Print()
+
+
+        value = float(stock.stockDates[-1].infos[0]) * stockData.amount
+
+        order += 1
+
+
+    return value
+
 
 # portfolio ya belirtilen item i ekleyecek fonksiyon
 def AddItem():
@@ -60,9 +120,11 @@ def AddItem():
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
 
-    Stocker.WriteFile('./Temp.txt', itemList.get(tkinter.ACTIVE))
+    stringValue = itemList.get(tkinter.ACTIVE).split('\t')[0]
 
-    Stocker.Open('./Stock.py')
+    Stocker.WriteFile('./Temp.txt', stringValue)
+
+    Stocker.Open('./Stock.py', True)
     
 
 # listedeki seçili item i portfolio dan çikaracak olan fonksiyon 
@@ -76,7 +138,7 @@ def GetValue():
     return '0'
 
 # uygulamanýn alim satimini baslatan fonksiyon
-def Start():
+def StartCalculation():
 
     global isWorking
 
@@ -92,25 +154,11 @@ def Start():
 
 
 
-def UIToPortfolio():
-
-
-
-    null
-
-def PortfolioToUI():
-
-    null
-
-
-    print(isWorking)
-
 
 # Tkinter arayüz kurulumu
 main = tkinter.Tk()
 main.title("Portfolio")
 main.resizable(False, False)
-
 
 # Tema renkleri belirleme kismi
 themeColor = "gray"
@@ -134,9 +182,9 @@ main.config(menu = Menu)
 fileMenu = tkinter.Menu(Menu, tearoff = 0)
 Menu.add_cascade(label = "Files", menu = fileMenu)
 fileMenu.add_command(label = "New")
-fileMenu.add_command(label = "Open")
+fileMenu.add_command(label = "Open", command = OpenFile)
 fileMenu.add_separator()   #cizgi olusturuyor
-fileMenu.add_command(label = "Save")
+fileMenu.add_command(label = "Save", command = SaveFile)
 
 
 editMenu = tkinter.Menu(Menu, tearoff = 0)
@@ -227,33 +275,16 @@ valueLabel = tkinter.Label(titleFrame, bg = themeColor, fg = userColor, font = 1
 valueLabel.pack()
 
 # baslat tusu
-StartButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Start", font = 24, width = 15, height = 3, command = Start)
+StartButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Start", font = 24, width = 15, height = 3, command = StartCalculation)
 StartButton.pack(side = tkinter.TOP)
 
 # Canvas grafikler için
 canvas = tkinter.Canvas(rightSideFrame, bg = themeColor, height = 500, width = 800)
 canvas.pack()
 
-# Portfolio itemlarini basladigin gibi çek
-GetPortfolioItems()
 
-
-
-# Stocker olarak yüklenen modülün kullanım örneği
-#portfolio = Stocker.Portfolio("My Portfolio")
-
-#portfolio.Load("./")
-
-#portfolio.Save("./", "EncodedPortfolio")
-
-#print(portfolio.stockDatas[0].name + " " + str(portfolio.stockDatas[0].amount))
-
-#stock = Stocker.Stock("TSL")
-
-#stock.Load("./")
-#stock.Save("./", "EncodedStock")
-
-#print(stock.stockDates[1].infos[0])
+Start()
 
 tkinter.mainloop()
+
     

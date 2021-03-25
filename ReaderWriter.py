@@ -347,6 +347,6 @@ def RemoveFile(path):
 
     os.remove(path)
 
-def Open(path):
-    Popen('py ' + path)
+def Open(path, hideShell = False):
+    Popen('py ' + path, shell = hideShell)
 
