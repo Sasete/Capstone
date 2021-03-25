@@ -1,6 +1,6 @@
 import base64
 from subprocess import Popen
-import pickle
+import os
 
 # Portfolio sınıfı
 class Portfolio:
@@ -203,67 +203,57 @@ class Stock:
         # veriyi oku
         data = ReadFile(path)
 
-        print(data)
+        # line ilk satır da olup olmadığımızı algılıyor
+        line = 0
+        for infoData in data.split('\n'):
+            # eger satır bossa, atla
+            if infoData is None:
 
-        # order önemli
-        # order == 0 name, order == 1 stock data lar
-        order = 0
-        # okunan veriyi \n ayracına göre parçalara böl
-        for info in data.split('\n'):
-
-            if order == 0:
-
-                # name i yaz
-                self.name = info
-                
-                order += 1
                 continue
+            
+            # ilk satırdaysak, ismi ilk satırdan alıyoruz
+            if line == 0:
+                self.name = infoData
+                line += 1
+                continue
+            
+            # degilsek,
+            if line == 1:
+                # veriyi ; lerden ayırıyoruz
+                for dateData in infoData.split(';'):
+                    # eger veri bossa atla
+                    if dateData is None:
 
-            if order == 1:
-                # her bir stock datasını yazmak için loop a gir
-
-                # bir list yarat stockdata lar için
-                stockDateList = [None] * len(info.split(';'))
-
-                orderMin = 0
-                for stockDat in info.split(';'):
-
-                    # eger stock boş ise, bitir
-                    if not stockDat:
-                        break
-                    # stock sınıfını listedeki konumuna yarat
-                    # TODO burada instance yaratmalı, önceki objeyi degil.
-                    stockDateList[orderMin] = StockDateData()
-                    # date i listedeki sınıfa al
-                    stockDateList[orderMin].date = stockDat.split(':')[0]
-                    # infolar için loop a gir
-                    stockDateList[orderMin].infos.clear()
-                    infos = stockDat.split(':')[1]
-
-                    print(infos)
-                    
-                    for stockInfo in infos.split(','):
-                        print(stockDateList[orderMin].date + ":" + stockInfo)
-                        # info yu sınıfa yaz
-                        stockDateList[orderMin].infos.append(stockInfo)
-                        
-                    # stockDate datalasını Stock data ya koy
-
-                    self.stockDates.clear()
-                    self.stockDates.extend(stockDateList)
-                    
-                    
-                    orderMin += 1
-                    
-                order += 1
-
-                for obj in stockDateList:
-
-                    print(obj)
+                        continue
+                    # her bir data için sınıfı initialize ediyoruz
+                    stockDateData = StockDateData()
+                    # ve o sınıfa veriyi verip kendini oku diyoruz
+                    stockDateData.Read(dateData)
+                    # okunan veriyi kendi stock verilerimize ekliyoruz
+                    self.stockDates.append(stockDateData)
                     
                 continue
 
-        
+
+    # Stock u ekrana basan fonksiyon
+    def Print(self):
+
+        stringVal = self.name + "\n"
+
+        for dateData in self.stockDates:
+
+            stringVal += dateData.date + ":"
+
+            for info in dateData.infos:
+
+                stringVal += info + ","
+
+            stringVal += ";"
+
+
+        stringVal = stringVal[:-1]
+
+        print("line 254:" + stringVal)
 
 # stock data, portfolio da saklanacak olan stockData
 class StockData:
@@ -301,8 +291,35 @@ class StockDateData:
 
     def __init__(self):
 
-        date = ""
-            
+        self.date = ""
+
+        self.infos = []
+        
+    # verilen veriden StockDateData yı okumak için fonksiyon
+    # örnek veri: 2011:105,100,90
+    def Read(self, data):
+
+        order = 0
+        for info in data.split(':'):
+
+            if info is None:
+                
+                continue
+
+            if order == 0:
+
+                self.date = info
+                
+                order += 1
+                continue
+
+            if order == 1:
+
+                for infoData in info.split(','):
+
+                    self.infos.append(infoData)
+                
+        
         
 # Dosya okumak için
 def ReadFile(path):
@@ -326,6 +343,9 @@ def WriteFile(path, data):
 
     f.close()
 
+def RemoveFile(path):
+
+    os.remove(path)
 
 def Open(path):
     Popen('py ' + path)

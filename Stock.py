@@ -44,25 +44,19 @@ def Start():
     # temp dosyasından stock un adını okuduk.
     stringValue = Stocker.ReadFile('./Temp.txt')
 
+    # global deki stock u kullanıcaz
     global stock
 
-
+    # stock u yeni bir stock olarak oluştur
     stock = Stocker.Stock(stringValue)
 
+    # stock u load et
     stock.Load('./')
-    
-    for date in stock.stockDates:
-    
-        print(date.date)
-
-        for info in date.infos:
-
-            print(info)
 
     # ./Temp.txt yi sil
+    Stocker.RemoveFile('./Temp.txt')
 
-    stock.Save('./')
-
+    # Stock a göre arayüzü düzenle.
     StockToUI()
 
 def UIToStock():
