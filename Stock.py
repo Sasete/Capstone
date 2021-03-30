@@ -51,7 +51,7 @@ def Start():
     stock = Stocker.Stock(stringValue)
 
     # stock u load et
-    stock.Load('./Resources/Stocks/')
+    stock.Load('./')
 
     # ./Temp.txt yi sil
     Stocker.RemoveFile('./Temp.txt')
