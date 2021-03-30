@@ -7,6 +7,8 @@ class Portfolio:
 
     name : str
 
+    money : float
+
     date : str
 
     stockDatas : list = []
@@ -18,8 +20,17 @@ class Portfolio:
 
         if name is not None:
             self.name = name
-        
+
+        money = 0
         self.date = ""
+
+    def Initialize(self):
+
+        self.name = ""
+        self.date = ""
+        money = 0
+        self.stockDatas.clear()
+        self.valueDatas.clear()
         
     # Stock u kolayca ekleyebilmek için
     def AddStock(self, stock):
@@ -58,7 +69,7 @@ class Portfolio:
 
         path += fileName
         # tarihten sonra \n ayracını koy
-        data = self.date + "\n"
+        data = self.date + ':' + str(self.money) + '\n'
 
         # her stock datasında gez ve bunları data ya ekle
         for stock in self.stockDatas:
@@ -78,6 +89,30 @@ class Portfolio:
         # veriyi dosyaya yaz
         WriteFile(path, data)
 
+
+    def GetTextToSave(self):
+        
+        # tarihten sonra \n ayracını koy
+        data = self.date + ':' + str(self.money) + '\n'
+
+        # her stock datasında gez ve bunları data ya ekle
+        for stock in self.stockDatas:
+
+            data += stock.name + ":" + str(stock.amount) + ","
+
+        # sondaki fazla , den kurtul
+        data = data[:-1]
+        # stock datalar bitti \n ayracını koy
+        data += "\n"
+        # value datalar arasında gez ve bunları data ya ekle
+        for value in self.valueDatas:
+
+            data += value.date + ":" + str(value.value) + ","
+        # sondaki fazla , den kurtul
+        data = data[:-1]
+
+        return data
+
     # .portfolio verisini okuyup sınıfa çeviren fonksiyon
     def Load(self, path, fileName = None):
         
@@ -95,7 +130,10 @@ class Portfolio:
         for info in data.split('\n'):
             # veri 0 sa tarihi oku
             if order == 0:
-                self.date = info
+
+                
+                self.date = info.split(':')[0]
+                self.money = float(info.split(':')[1])
                 
                 order += 1
                 continue
@@ -143,6 +181,11 @@ class Stock:
     def __init__(self, name):
 
         self.name = name
+
+    def Initialize(self):
+
+        self.name = ""
+        self.stockDates.clear()
 
     # stock date i eklemek için olan fonksiyon
     def AddStockDate(self, stockDate):
@@ -242,11 +285,19 @@ class Stock:
 
         for dateData in self.stockDates:
 
+            if dateData is None:
+                continue
+
             stringVal += dateData.date + ":"
 
             for info in dateData.infos:
 
+                if info is None:
+                    continue
+
                 stringVal += info + ","
+
+            stringVal = stringVal[:-1]
 
             stringVal += ";"
 

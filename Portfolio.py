@@ -1,6 +1,7 @@
 import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
+import datetime
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -8,23 +9,54 @@ isWorking = False
 
 portfolio = Stocker.Portfolio('')
 
+path = ''
+fileName = ''
+
 def Start():
 
-    OpenFile()
+    NewFile()
+
+
+def NewFile():
+
+    global path
+    global fileName
+    global portfolio
+
+    date = datetime.datetime.now()
+
+    path = './'
+    fileName = 'MyPortfolio'
+
+    
+    portfolio.Initialize()
+
+    portfolio.date = str(date.year)
+    portfolio.money = 1000
+
+    PortfolioToUI()
     
 # dosya çalışmaları için fonksiyonlar oluşturuluyor
 def OpenFile():
     
     filetypes = [ ('Portfolio Files', '*.portfolio') ]
-    path = tkinter.filedialog.askopenfilename(title = "openFile", initialdir = './', filetypes = filetypes)
+
+    global path
+    global fileName
+    
+    path = tkinter.filedialog.askopenfilename(title = "Open File", initialdir = './', filetypes = filetypes)
     fileName = path.split('/')[-1]    
     path = path[:len(path) - len(fileName)]
 
+
+    
 
     extention = fileName.split('.')[-1]
     fileName = fileName[:len(fileName) - (len(extention)+1)]
 
     global portfolio
+
+    portfolio.Initialize()
 
     # TODO SHOULD INITIALIZE PORTFOLIO
 
@@ -37,22 +69,39 @@ def OpenFile():
 
 def SaveFile():
 
-    print("Saved File!")
+#    print("Saved File!")
 
-    return
+#    return
 
     # TODO SHOULD SAVE FILE
-    path = tkinter.filedialog.asksaveasfile(mode='w')
-    fileName = path.split('/')[-1]    
-    path = path[:len(path) - len(fileName)]
 
-
-    extention = fileName.split('.')[-1]
-    fileName = fileName[:len(fileName) - (len(extention)+1)]
-
+    global path
+    global fileName
     global portfolio
 
     portfolio.Save(path, fileName)
+
+    print('Saved File!')
+
+def SaveAsFile():
+    
+    filetypes = [ ('Portfolio Files', '*.portfolio') ]
+    
+    # TODO SHOULD SAVE FILE
+    path = tkinter.filedialog.asksaveasfile(mode='w', title = "Save File", initialdir = './', defaultextension=".portfolio", filetypes = filetypes)
+
+    if path is None: # asksaveasfile return `None` if dialog closed with "cancel".
+        return
+    
+    global portfolio
+
+
+    data = portfolio.GetTextToSave()
+
+    path.write(data)
+    path.close()
+
+    print('Saved File!')
 
 
 def UIToPortfolio():
@@ -73,12 +122,18 @@ def PortfolioToUI():
 
     value = CalculateValue()
 
-    valueLabel.config(text = str(value))
+    stringValue = str(portfolio.money) + '$ money + ' + str(value) + '$ stocks'
+
+    valueLabel.config(text = stringValue)
 
 # portfolio daki itemlari listeye listeleyecek fonksiyon
 def GetPortfolioItems():
 
     global portfolio
+
+
+    itemList.delete(0, tkinter.END)
+
 
     # burada PortfolioToUI() çalışması gerek. Şimdilik sadece stockları yerine koyuyor.
     for stockData in portfolio.stockDatas:
@@ -97,14 +152,19 @@ def CalculateValue():
     order = 0
     for stockData in portfolio.stockDatas:
 
+        
         stock = Stocker.Stock(stockData.name)
+
+        stock.Initialize()
+
+        stock.name = stockData.name
 
         stock.Load('./Resources/Stocks/')
 
         stock.Print()
 
+        value += float(stock.stockDates[-1].infos[0]) * stockData.amount
 
-        value = float(stock.stockDates[-1].infos[0]) * stockData.amount
 
         order += 1
 
@@ -181,10 +241,11 @@ main.config(menu = Menu)
 
 fileMenu = tkinter.Menu(Menu, tearoff = 0)
 Menu.add_cascade(label = "Files", menu = fileMenu)
-fileMenu.add_command(label = "New")
+fileMenu.add_command(label = "New", command = NewFile)
 fileMenu.add_command(label = "Open", command = OpenFile)
 fileMenu.add_separator()   #cizgi olusturuyor
 fileMenu.add_command(label = "Save", command = SaveFile)
+fileMenu.add_command(label = "Save as", command = SaveAsFile)
 
 
 editMenu = tkinter.Menu(Menu, tearoff = 0)
