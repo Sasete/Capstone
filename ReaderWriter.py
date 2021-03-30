@@ -41,7 +41,18 @@ class Portfolio:
     # Stock u kolayca silebilmek için
     def RemoveStock(self, stock):
 
-        self.stockDatas.remove(stock)
+        for stockData in self.stockDatas:
+
+            if stockData is None:
+                continue
+
+            if stockData.name == stock.name:
+
+                stockData.amount -= stock.amount
+
+                if stockData.amount <= 0:
+
+                    self.stockDatas.remove(stockData)
 
         return
     # Value bilgisini ekleyebilmek için
@@ -318,6 +329,7 @@ class StockData:
         self.name = name
 
         self.amount = amount
+
         
 
 # valueData, portfolio da saklanacak olan valueData

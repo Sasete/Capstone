@@ -2,6 +2,8 @@ import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
 import datetime
+import yfinance as yf
+import requests, json
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -103,11 +105,6 @@ def SaveAsFile():
 
     print('Saved File!')
 
-
-def UIToPortfolio():
-
-    null
-
 def PortfolioToUI():
 
     global portfolio
@@ -175,8 +172,62 @@ def CalculateValue():
 # portfolio ya belirtilen item i ekleyecek fonksiyon
 def AddItem():
 
-    null
+    newStock = yf.Ticker(itemName.get())
 
+    # Write item into Database
+    try:
+        stockInfo = PullStock(itemName.get())
+
+        date = datetime.datetime.now()
+
+        key = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day - 1)
+
+        info1 = stockInfo[key]['4. close']
+
+        print(info1)
+        
+    except:
+
+        print('Stock not found!')
+        return
+
+    stock = Stocker.Stock(itemName.get())
+
+    stockDate = Stocker.StockDateData()
+    stockDate.date = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day - 1)
+    stockDate.infos.append(info1)
+
+    stock.stockDates.append(stockDate)
+
+    stock.Save('./Resources/Stocks/')
+
+    global portfolio
+    
+    
+    stockData = Stocker.StockData(itemName.get(), 1)
+
+    portfolio.AddStock(stockData)
+
+    PortfolioToUI()
+    
+
+    #SaveFile()
+
+def PullStock(stockName):
+    func = 'function=TIME_SERIES_DAILY'
+    sym = 'symbol=' + stockName # apples stock price as an example (only NASDAQ are there)
+    inter = 'interval=15min'
+    apikey = 'apikey=XXXXXXXXXXX'
+    url = 'https://www.alphavantage.co/query?'+func+'&'+sym+'&'+inter+'&'+apikey
+
+    resp = requests.get(url)
+    data = json.loads(resp.content)
+    d = data['Time Series (Daily)']
+
+    print(d)
+
+    return d
+    
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
 
@@ -190,7 +241,20 @@ def EditItem():
 # listedeki seçili item i portfolio dan çikaracak olan fonksiyon 
 def RemoveItem():
 
-    null
+    stringValue = itemList.get(tkinter.ACTIVE)
+
+    stockName = stringValue.split('\t')[0]
+    stockAmount = int(stringValue.split('\t')[1].split('x')[1])
+    
+    stockData = Stocker.StockData(stockName, stockAmount)
+
+    global portfolio
+
+    portfolio.RemoveStock(stockData)
+
+    PortfolioToUI()
+
+    #SaveFile()
 
 # degeri arayüz için alan fonksiyon
 def GetValue():
