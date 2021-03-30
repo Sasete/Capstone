@@ -201,7 +201,7 @@ class Stock:
     # stock date i eklemek için olan fonksiyon
     def AddStockDate(self, stockDate):
 
-        stockDates.append(stockDate)
+        self.stockDates.append(stockDate)
 
         return
     # stock date i silmek için olan fonksiyon

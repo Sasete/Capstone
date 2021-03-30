@@ -175,31 +175,42 @@ def AddItem():
     newStock = yf.Ticker(itemName.get())
 
     # Write item into Database
-    try:
-        stockInfo = PullStock(itemName.get())
+    #try:
 
-        date = datetime.datetime.now()
+    stockInfo = PullStock(itemName.get())
 
-        key = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day - 1)
-
-        info1 = stockInfo[key]['4. close']
-
-        print(info1)
-        
-    except:
-
-        print('Stock not found!')
-        return
+    print(stockInfo)
 
     stock = Stocker.Stock(itemName.get())
+    
+    for i in range(len(stockInfo)):
 
-    stockDate = Stocker.StockDateData()
-    stockDate.date = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day - 1)
-    stockDate.infos.append(info1)
+        column = stockInfo.iloc[i,]
 
-    stock.stockDates.append(stockDate)
+        date = str(column).split('Name:')[1].split(' ')[1]
 
+        print("DATE" + date)
+
+        stringVal = date + ":"
+        
+        for dat in stockInfo.iloc[i]:
+
+            stringVal += str(dat) + ","
+
+            print(dat)
+
+        stringVal = stringVal[:-1]
+
+        stockDate = Stocker.StockDateData()
+        stockDate.Read(stringVal)
+
+        stock.AddStockDate(stockDate)
+        
+                
+        
     stock.Save('./Resources/Stocks/')
+
+
 
     global portfolio
     
@@ -214,19 +225,25 @@ def AddItem():
     #SaveFile()
 
 def PullStock(stockName):
-    func = 'function=TIME_SERIES_DAILY'
-    sym = 'symbol=' + stockName # apples stock price as an example (only NASDAQ are there)
-    inter = 'interval=15min'
-    apikey = 'apikey=XXXXXXXXXXX'
-    url = 'https://www.alphavantage.co/query?'+func+'&'+sym+'&'+inter+'&'+apikey
 
-    resp = requests.get(url)
-    data = json.loads(resp.content)
-    d = data['Time Series (Daily)']
+    date = datetime.datetime.now()
 
-    print(d)
+    b = datetime.timedelta(days = 11)
+    a = datetime.timedelta(days = 1)
+    
+    dateA = date - a
+    dateB = date - b
+    
+    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day)
 
-    return d
+    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day)
+    
+    stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
+
+
+    stockData.head()
+
+    return stockData
     
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
