@@ -25,7 +25,7 @@ def OpenFile():
     stock.Load(path, fileName)
 
 
-    print(stock.stockDates[-1].date + stock.stockDates[-1].infos[-1])
+    print(stock.stockDates[-1].date + stock.stockDates[-1].infos[-1].info)
 
     stock.stockDates[-1].infos[-1] = 'en guncel info'
     stock.Save(path, fileName)

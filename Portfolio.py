@@ -160,7 +160,7 @@ def CalculateValue():
 
         stock.Print()
 
-        value += float(stock.stockDates[-1].infos[0]) * stockData.amount
+        value += float(stock.stockDates[-1].infos[0].info) * stockData.amount
 
 
         order += 1
@@ -172,7 +172,7 @@ def CalculateValue():
 # portfolio ya belirtilen item i ekleyecek fonksiyon
 def AddItem():
 
-    newStock = yf.Ticker(itemName.get())
+    #newStock = yf.Ticker(itemName.get())
 
     # Write item into Database
     #try:
@@ -183,21 +183,31 @@ def AddItem():
 
     stock = Stocker.Stock(itemName.get())
     
+    
     for i in range(len(stockInfo)):
 
         column = stockInfo.iloc[i,]
+
+
 
         date = str(column).split('Name:')[1].split(' ')[1]
 
         print("DATE" + date)
 
         stringVal = date + ":"
-        
+
+        order = 0
         for dat in stockInfo.iloc[i]:
 
-            stringVal += str(dat) + ","
+            data = str(column).split('\n')[order].split(' ')[0]
+            
+            print("DATA" + data)
+            
+            stringVal += "\"" + data + "\"" + str(dat) + ","
 
             print(dat)
+            
+            order += 1
 
         stringVal = stringVal[:-1]
 
@@ -220,9 +230,9 @@ def AddItem():
     portfolio.AddStock(stockData)
 
     PortfolioToUI()
-    
 
-    #SaveFile()
+
+    SaveFile()
 
 def PullStock(stockName):
 
@@ -242,7 +252,6 @@ def PullStock(stockName):
 
 
     stockData.head()
-
     return stockData
     
 # listedeki seçili item in arayüzünü açacak fonksiyon

@@ -234,7 +234,7 @@ class Stock:
                 if info is None:
                     break
                 # info yu data ya yaz
-                data += stockDate.infos[order] + ","
+                data += stockDate.infos[order].Write() + ","
                 order += 1
             # sondaki gereksiz , den kurtul, yerine ; koy
             data = data[:-1] + ";"
@@ -306,7 +306,7 @@ class Stock:
                 if info is None:
                     continue
 
-                stringVal += info + ","
+                stringVal += info.Write() + ","
 
             stringVal = stringVal[:-1]
 
@@ -380,9 +380,48 @@ class StockDateData:
 
                 for infoData in info.split(','):
 
-                    self.infos.append(infoData)
-                
+                    info = DateInfo()
+
+                    info.Read(infoData)
+
+                    self.infos.append(info)
+
+            
+
+# StockDateData daki info listteki datalar
+class DateInfo():
+
+    name : str
+
+    info : str
+
+    def __init__(self):
+
+        self.name = ""
+        self.info = ""
+
+
+    def Initialize(self):
+
+        self.name = ""
+        self.info = ""
+
+    def Read(self, stringInfo):
+
+        # string info söyle bir veri: "VerininAdi"Veridegeri
+        self.name = stringInfo.split('"')[1]
+
+        self.info = stringInfo.split('"')[2]
         
+    def Write(self):
+
+        return "\"" + self.name + "\"" + self.info
+
+    def Load(self, name, info):
+
+        self.name = name
+        self.info = info
+    
         
 # Dosya okumak için
 def ReadFile(path):
