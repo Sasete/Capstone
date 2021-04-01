@@ -94,7 +94,7 @@ class Portfolio:
         # value datalar arasında gez ve bunları data ya ekle
         for value in self.valueDatas:
 
-            data += value.date + ":" + str(value.value) + ","
+            data += str(value.date) + ":" + str(value.value) + ","
         # sondaki fazla , den kurtul
         data = data[:-1]
         # veriyi dosyaya yaz
@@ -118,7 +118,7 @@ class Portfolio:
         # value datalar arasında gez ve bunları data ya ekle
         for value in self.valueDatas:
 
-            data += value.date + ":" + str(value.value) + ","
+            data += str(value.date) + ":" + str(value.value) + ","
         # sondaki fazla , den kurtul
         data = data[:-1]
 

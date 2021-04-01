@@ -4,6 +4,9 @@ from tkinter import filedialog
 import datetime
 import yfinance as yf
 import requests, json
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -36,6 +39,12 @@ def NewFile():
     portfolio.date = str(date.year)
     portfolio.money = 1000
 
+    dateString = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2) + '-' + str(date.hour).zfill(2) + '-' + str(date.minute).zfill(2) + '-' + str(date.second).zfill(2)
+
+    valueData = Stocker.ValueData(dateString, float(portfolio.money))
+    
+    portfolio.AddValueData(valueData)
+
     PortfolioToUI()
     
 # dosya çalışmaları için fonksiyonlar oluşturuluyor
@@ -59,8 +68,6 @@ def OpenFile():
     global portfolio
 
     portfolio.Initialize()
-
-    # TODO SHOULD INITIALIZE PORTFOLIO
 
     portfolio.name = fileName
 
@@ -123,6 +130,38 @@ def PortfolioToUI():
 
     valueLabel.config(text = stringValue)
 
+    PrepareGraph()
+
+
+def PrepareGraph():
+
+    global portfolio
+
+    dates = []
+    values = []
+    
+
+    for value in portfolio.valueDatas:
+
+        print(str(value.date) + ':' + str(value.value))
+
+        date = datetime.datetime.strptime(value.date,'%Y-%m-%d-%H-%M-%S')
+        
+        dates.append(date)
+        values.append(value.value)
+    
+    data = {'Dates' : dates, 'Values' : values}
+    df = DataFrame(data, columns = ['Dates', 'Values'])
+
+    figure.clear()
+    ax = figure.add_subplot(111)
+    df = df[['Dates', 'Values']].groupby('Dates').sum()
+    df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
+    ax.set_title('Values')
+
+    line.draw()
+    
+
 # portfolio daki itemlari listeye listeleyecek fonksiyon
 def GetPortfolioItems():
 
@@ -145,6 +184,34 @@ def CalculateValue():
     global portfolio
 
     value= 0
+    
+    order = 0
+    for stockData in portfolio.stockDatas:
+
+        
+        stock = Stocker.Stock(stockData.name)
+
+        stock.Initialize()
+
+        stock.name = stockData.name
+
+        stock.Load('./Resources/Stocks/')
+
+        stock.Print()
+
+        value += float(stock.stockDates[-1].infos[0].info) * stockData.amount
+
+
+        order += 1
+
+
+    return value
+
+def CalculateValueAsOne():
+
+    global portfolio
+
+    value= portfolio.money
     
     order = 0
     for stockData in portfolio.stockDatas:
@@ -229,8 +296,17 @@ def AddItem():
 
     portfolio.AddStock(stockData)
 
-    PortfolioToUI()
+    date = datetime.datetime.now()
 
+    dateString = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2) + '-' + str(date.hour).zfill(2) + '-' + str(date.minute).zfill(2) + '-' + str(date.second).zfill(2)
+
+    value = CalculateValueAsOne()
+
+    valueData = Stocker.ValueData(dateString, float(value))
+
+    portfolio.AddValueData(valueData)
+
+    PortfolioToUI()
 
     SaveFile()
 
@@ -433,6 +509,13 @@ StartButton.pack(side = tkinter.TOP)
 canvas = tkinter.Canvas(rightSideFrame, bg = themeColor, height = 500, width = 800)
 canvas.pack()
 
+figure = plt.Figure(figsize=(5,4), dpi=100)
+#ax = figure.add_subplot(111)
+line = FigureCanvasTkAgg(figure, canvas)
+line.get_tk_widget().pack()
+#df = df[['Dates', 'Values']].groupby('Dates').sum()
+#df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
+#ax.set_title('Values')
 
 Start()
 
