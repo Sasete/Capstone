@@ -288,6 +288,32 @@ class Stock:
                     
                 continue
 
+    def GetTextToSave():
+
+        stringVal = self.name + "\n"
+
+
+        for dateData in self.stockDates:
+
+            if dateData is None:
+                continue
+
+            stringVal += dateData.date + ":"
+
+            for info in dateData.infos:
+
+                if info is None:
+                    continue
+
+                stringVal += info.Write()
+
+            stringVal = stringVal[:-1]
+
+
+        stringVal = stringVal[:-1]
+
+        return stringVal
+        
 
     # Stock u ekrana basan fonksiyon
     def Print(self):
@@ -386,7 +412,19 @@ class StockDateData:
 
                     self.infos.append(info)
 
-            
+    def Write(self):
+
+        stringVal = ''
+
+        for data in self.infos:
+
+            stringVal += data.Write() + ','
+
+
+        stringVal = stringVal[:-1] + ';'
+        
+        return stringVal
+        
 
 # StockDateData daki info listteki datalar
 class DateInfo():

@@ -1,16 +1,27 @@
 import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
+import datetime
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 stock = Stocker.Stock('')
+
+path = ''
+fileName = ''
 
 # degeri arayüz için alan fonksiyon
 def GetValue():
 
     return '0'
+    
 
 # dosya çalışmaları için fonksiyonlar oluşturuluyor
 def OpenFile():
+    
+    global path
+    global fileName
     
     filetypes = [ ('Stock Files', '*.stock') ]
     path = tkinter.filedialog.askopenfilename(title = "openFile", initialdir = './', filetypes = filetypes)
@@ -20,22 +31,47 @@ def OpenFile():
 
     extention = fileName.split('.')[-1]
     fileName = fileName[:len(fileName) - (len(extention)+1)]
+
+    global stock
+
+    stock.Initialize()
+
+    stock.name = fileName
     
-    stock = Stocker.Stock('')
-    stock.Load(path, fileName)
+    stock.Load(path)
 
-
-    print(stock.stockDates[-1].date + stock.stockDates[-1].infos[-1].info)
-
-    stock.stockDates[-1].infos[-1] = 'en guncel info'
-    stock.Save(path, fileName)
-
+    StockToUI()
+    
 def SaveFile():
 
-    path = asksaveasfile(mode='w')
-    saveText = "merhaba dünya"
-    path.write(saveText)
+    global path
+    global fileName
+    global stock
+
+    stock.Save(path, fileName)
+
+    print('Saved File!')
+
+def SaveAsFile():
+    
+    filetypes = [ ('Portfolio Files', '*.portfolio') ]
+    
+    # TODO SHOULD SAVE FILE
+    path = tkinter.filedialog.asksaveasfile(mode='w', title = "Save File", initialdir = './', defaultextension=".portfolio", filetypes = filetypes)
+
+    if path is None: # asksaveasfile return `None` if dialog closed with "cancel".
+        return
+    
+    global stock
+
+
+    data = stock.GetTextToSave()
+
+    path.write(data)
     path.close()
+
+    print('Saved File!')
+    
 
 def Start():
 
@@ -70,29 +106,53 @@ def StockToUI():
     global stock
 
 
-    nameText.set(stock.name)
-    valueText.set(stock.stockDates[len(stock.stockDates) - 1].infos[0])
-    dateText.set(stock.stockDates[len(stock.stockDates) - 1].date)
-
-
-
-    nameLabel.config(text = nameText.get())
-    valueLabel.config(text = valueText.get())
-    dateLabel.config(text = dateText.get())
+    stringVar = 'Name:\t ' + stock.name + '\n'
+    stringVar += 'Date:\t ' + stock.stockDates[len(stock.stockDates) - 1].date + '\n'
     
 
+    for data in stock.stockDates[len(stock.stockDates) - 1].infos:
+
+        stringVar += data.name + ':\t ' + data.info + '\n' 
+        
+
+    stringVar = stringVar[:-1]
+
+
+    infoText.set(stringVar)
+    infoLabel.config(text = infoText.get())
+
+    
+    PrepareGraph()
 
 
 
+def PrepareGraph():
+
+    
+    global stock
+
+    dates = []
+    values = []
+
+    for value in stock.stockDates:
+
+        #Hangi infonun baz alınacagı secilmeli...
+        date = datetime.datetime.strptime(value.date,'%Y-%m-%d')
+
+        dates.append(date)
+        values.append(float(value.infos[0].info))
 
 
+    data = {'Dates' : dates, 'Values' : values}
+    df = DataFrame(data, columns = ['Dates', 'Values'])
 
+    figure.clear()
+    ax = figure.add_subplot(111)
+    df = df[['Dates', 'Values']].groupby('Dates').sum()
+    df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
+    ax.set_title('Values')
 
-
-
-
-
-
+    line.draw()
 
 
 # Tkinter arayüz kurulumu
@@ -122,10 +182,10 @@ main.config(menu = Menu)
 
 fileMenu = tkinter.Menu(Menu, tearoff = 0)
 Menu.add_cascade(label = "Files", menu = fileMenu)
-fileMenu.add_command(label = "New")
 fileMenu.add_command(label = "Open", command = OpenFile)
-fileMenu.add_separator()   #cizgi olusturuyor
-fileMenu.add_command(label = "Save", command = SaveFile)
+#fileMenu.add_separator()   #cizgi olusturuyor
+#fileMenu.add_command(label = "Save As", command = SaveAsFile)
+#fileMenu.add_command(label = "Save", command = SaveFile)
 
 
 editMenu = tkinter.Menu(Menu, tearoff = 0)
@@ -175,44 +235,12 @@ canvasLabel = tkinter.Label(rightFrame, bg = themeColor, fg =userColor, font = 2
 canvasLabel.pack(side = tkinter.TOP, fill = tkinter.X)
 
 # name deger gösterilmesi için veriye ataniyor
-nameText = tkinter.StringVar()
-nameText.set('Name: ' + GetValue())
-
-# value deger gösterilmesi için veriye ataniyor
-valueText = tkinter.StringVar()
-valueText.set('Value: ' + GetValue())
-
-# nineDayAverage deger gösterilmesi için veriye ataniyor
-nineDayAverageText = tkinter.StringVar()
-nineDayAverageText.set('Nine Day Average: ' + GetValue())
-
-# fortyDayAverage deger gösterilmesi için veriye ataniyor
-fortyDayAverageText = tkinter.StringVar()
-fortyDayAverageText.set('Forty Day Average: ' + GetValue())
-
-# date deger gösterilmesi için veriye ataniyor
-dateText = tkinter.StringVar()
-dateText.set('Date: ' + GetValue())
+infoText = tkinter.StringVar()
+infoText.set('Name: ' + GetValue())
 
 # name degeri gösterecek olan alan 
-nameLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = nameText.get())
-nameLabel.pack()
-
-# value degeri gösterecek olan alan 
-valueLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = valueText.get())
-valueLabel.pack()
-
-# nineDayAverage degeri gösterecek olan alan 
-nineDayAverageLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = nineDayAverageText.get())
-nineDayAverageLabel.pack()
-
-# fortyDayAverage degeri gösterecek olan alan 
-fortyDayAverageLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = fortyDayAverageText.get())
-fortyDayAverageLabel.pack()
-
-# date degeri gösterecek olan alan 
-dateLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = dateText.get())
-dateLabel.pack()
+infoLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = infoText.get(), justify = tkinter.LEFT)
+infoLabel.pack()
 
 # Canvas grafikler için
 canvas = tkinter.Canvas(rightFrame, bg = themeColor, height = 500, width = 800)
@@ -222,6 +250,15 @@ canvas.pack()
 #fileName = tkinter.filedialog.askopenfilename(title = "openFile", initialdir = './', filetypes = filetypes)
 
 #print(fileName)
+
+figure = plt.Figure(figsize=(5,4), dpi=100)
+#ax = figure.add_subplot(111)
+line = FigureCanvasTkAgg(figure, canvas)
+line.get_tk_widget().pack()
+#df = df[['Dates', 'Values']].groupby('Dates').sum()
+#df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
+#ax.set_title('Values')
+
 
 Start()
 

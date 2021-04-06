@@ -239,17 +239,32 @@ def CalculateValueAsOne():
 # portfolio ya belirtilen item i ekleyecek fonksiyon
 def AddItem():
 
-    #newStock = yf.Ticker(itemName.get())
+    item_name = itemName.get().upper()
 
-    # Write item into Database
-    #try:
+    print(item_name)
+    
+    if item_name == 'Item Shortcut' or item_name.isspace():
 
-    stockInfo = PullStock(itemName.get())
+        print('You need an item name')
+
+        return
+
+
+    stockInfo = PullStock(item_name)
+
+    if stockInfo is None:
+
+        return
+
+    if DoesStockExist():
+
+        print('Stock is already exist...')
+        
+        return
 
     print(stockInfo)
 
-    stock = Stocker.Stock(itemName.get())
-    
+    stock = Stocker.Stock(item_name)
     
     for i in range(len(stockInfo)):
 
@@ -292,7 +307,7 @@ def AddItem():
     global portfolio
     
     
-    stockData = Stocker.StockData(itemName.get(), 1)
+    stockData = Stocker.StockData(item_name, 1)
 
     portfolio.AddStock(stockData)
 
@@ -308,27 +323,65 @@ def AddItem():
 
     PortfolioToUI()
 
-    SaveFile()
+    #SaveFile()
+
+def DoesStockExist():
+
+    retVal = False
+    
+    global portfolio
+
+    stockName = itemName.get()
+
+    for item in itemList.get(0,tkinter.END):
+        
+        item_name = item.split('\t')[0]
+
+        if item_name == stockName:
+
+            retVal = True
+            
+
+
+
+    return retVal
+
 
 def PullStock(stockName):
 
-    date = datetime.datetime.now()
+    try:
+        date = datetime.datetime.now()
 
-    b = datetime.timedelta(days = 11)
-    a = datetime.timedelta(days = 1)
+        b = datetime.timedelta(days = 11)
+        a = datetime.timedelta(days = 1)
     
-    dateA = date - a
-    dateB = date - b
+        dateA = date - a
+        dateB = date - b
     
-    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day)
+        startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day)
 
-    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day)
+        endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day)
     
-    stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
+        stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
+
+        
 
 
-    stockData.head()
-    return stockData
+        stockData.head()
+
+        if len(stockData.head().index) > 0:
+        
+            return stockData
+
+        else:
+            
+            print('Couldn\'t find stock...')
+            return None
+            
+    
+    except:
+        print('Couldn\'t find stock...')
+        return None
     
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
