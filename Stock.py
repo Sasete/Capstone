@@ -11,6 +11,8 @@ stock = Stocker.Stock('')
 path = ''
 fileName = ''
 
+graphState = 0
+
 # degeri arayüz için alan fonksiyon
 def GetValue():
 
@@ -130,17 +132,22 @@ def PrepareGraph():
 
     
     global stock
+    global graphState
 
     dates = []
     values = []
+
+    graphName = ''
 
     for value in stock.stockDates:
 
         #Hangi infonun baz alınacagı secilmeli...
         date = datetime.datetime.strptime(value.date,'%Y-%m-%d')
 
+        graphName = value.infos[graphState].name
+
         dates.append(date)
-        values.append(float(value.infos[0].info))
+        values.append(float(value.infos[graphState].info))
 
 
     data = {'Dates' : dates, 'Values' : values}
@@ -153,10 +160,17 @@ def PrepareGraph():
     
     df = df[['Dates', 'Values']].groupby('Dates').sum()
     df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
-    ax.set_title('Values')
+    ax.set_title(graphName)
 
     line.draw()
 
+def SetGraphState(state):
+
+    global graphState
+
+    graphState = state
+
+    PrepareGraph()
 
 # Tkinter arayüz kurulumu
 main = tkinter.Tk()
@@ -192,9 +206,13 @@ fileMenu.add_command(label = "Open", command = OpenFile)
 
 
 editMenu = tkinter.Menu(Menu, tearoff = 0)
-Menu.add_cascade(label = "Edit", menu = editMenu)
-#editMenu.add_command(label = "")
-#editMenu.add_command(label = "")
+Menu.add_cascade(label = "Graph", menu = editMenu)
+editMenu.add_command(label = "Open", command = lambda: SetGraphState(0))
+editMenu.add_command(label = "High", command = lambda: SetGraphState(1))
+editMenu.add_command(label = "Low", command = lambda: SetGraphState(2))
+editMenu.add_command(label = "Close", command = lambda: SetGraphState(3))
+editMenu.add_command(label = "Adj", command = lambda: SetGraphState(4))
+editMenu.add_command(label = "Volume", command = lambda: SetGraphState(5))
 #editMenu.add_separator()   #cizgi olusturuyor
 #editMenu.add_command(label = "")
 

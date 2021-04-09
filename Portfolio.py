@@ -162,7 +162,7 @@ def PrepareGraph():
     ax.set_facecolor(systemColor)
     df = df[['Dates', 'Values']].groupby('Dates').sum()
     df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
-    ax.set_title('Values')
+    ax.set_title('Value History')
 
     line.draw()
     
