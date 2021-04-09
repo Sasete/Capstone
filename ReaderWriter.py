@@ -490,3 +490,9 @@ def RemoveFile(path):
 def Open(path, hideShell = False):
     Popen('py ' + path, shell = hideShell)
 
+def HumanFormat(num, round_to=2):
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num = round(num / 1000.0, round_to)
+    return '{:.{}f}{}'.format(round(num, round_to), round_to, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])

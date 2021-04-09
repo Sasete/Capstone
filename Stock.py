@@ -114,7 +114,12 @@ def StockToUI():
 
     for data in stock.stockDates[len(stock.stockDates) - 1].infos:
 
-        stringVar += data.name + ':\t ' + data.info + '\n' + '\n' 
+        # istisna deger olmamalı bunlar sınıfın içinde belirtilmeli.
+        if data.name == "Volume":
+            stringVar += data.name + ':\t ' + Stocker.HumanFormat(float(data.info)) + '\n' + '\n' 
+            continue
+
+        stringVar += data.name + ':\t ' + "{:.2f}".format(float(data.info)) + '$' + '\n' + '\n' 
         
 
     stringVar = stringVar[:-1]
@@ -123,7 +128,7 @@ def StockToUI():
     infoText.set(stringVar)
     infoLabel.config(text = infoText.get())
 
-    
+    PrepareDropdownGraphMenu()
     PrepareGraph()
 
 
@@ -164,11 +169,34 @@ def PrepareGraph():
 
     line.draw()
 
+def PrepareDropdownGraphMenu():
+
+
+    global stock
+
+    editMenu.delete(0, tkinter.END)
+
+    exampleStock = stock.stockDates[0]
+
+    lambdaList = []
+    listint = []
+
+    for i in range(len(exampleStock.infos)):
+
+        value = exampleStock.infos[i]
+
+
+        lambdaList.append(lambda i=i: SetGraphState(i))
+        listint.append(i)
+        
+        editMenu.add_command(label = value.name, command = lambdaList[i])
+
+
 def SetGraphState(state):
 
     global graphState
 
-    graphState = state
+    graphState = int(state)
 
     PrepareGraph()
 
