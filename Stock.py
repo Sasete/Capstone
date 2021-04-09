@@ -106,13 +106,13 @@ def StockToUI():
     global stock
 
 
-    stringVar = 'Name:\t ' + stock.name + '\n'
-    stringVar += 'Date:\t ' + stock.stockDates[len(stock.stockDates) - 1].date + '\n'
+    stringVar = 'Name:\t ' + stock.name + '\n' + '\n'
+    stringVar += 'Date:\t ' + stock.stockDates[len(stock.stockDates) - 1].date + '\n' + '\n'
     
 
     for data in stock.stockDates[len(stock.stockDates) - 1].infos:
 
-        stringVar += data.name + ':\t ' + data.info + '\n' 
+        stringVar += data.name + ':\t ' + data.info + '\n' + '\n' 
         
 
     stringVar = stringVar[:-1]
@@ -149,7 +149,7 @@ def PrepareGraph():
     figure.clear()
     ax = figure.add_subplot(111)
 
-    ax.set_facecolor(themeColor)
+    ax.set_facecolor(systemColor)
     
     df = df[['Dates', 'Values']].groupby('Dates').sum()
     df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
@@ -234,7 +234,7 @@ s_width = 200
 
 
 # canvas oluşturulan alan 
-canvasLabel = tkinter.Label(rightFrame, bg = themeColor, fg =userColor, font = 24, text = "Value Graph")
+canvasLabel = tkinter.Label(rightFrame, bg = themeColor, fg = systemColor, font = 24, text = "Value Graph")
 canvasLabel.pack(side = tkinter.TOP, fill = tkinter.X)
 
 # name deger gösterilmesi için veriye ataniyor
@@ -242,7 +242,7 @@ infoText = tkinter.StringVar()
 infoText.set('Name: ' + GetValue())
 
 # name degeri gösterecek olan alan 
-infoLabel = tkinter.Label(leftFrame, bg = themeColor, fg = userColor, font = 18, text = infoText.get(), justify = tkinter.LEFT)
+infoLabel = tkinter.Label(leftFrame, bg = themeColor, fg = systemColor, font = 18, text = infoText.get(), justify = tkinter.LEFT)
 infoLabel.pack()
 
 # Canvas grafikler için

@@ -126,7 +126,11 @@ def PortfolioToUI():
 
     value = CalculateValue()
 
-    stringValue = str(portfolio.money) + '$ money + ' + str(value) + '$ stocks'
+    value = "{:.2f}".format(value)
+
+    money = "{:.2f}".format(portfolio.money)
+    
+    stringValue = str(money) + '$ money + ' + str(value) + '$ stocks'
 
     valueLabel.config(text = stringValue)
 
@@ -155,7 +159,7 @@ def PrepareGraph():
 
     figure.clear()
     ax = figure.add_subplot(111)
-    ax.set_facecolor(themeColor)
+    ax.set_facecolor(systemColor)
     df = df[['Dates', 'Values']].groupby('Dates').sum()
     df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
     ax.set_title('Values')
@@ -512,7 +516,7 @@ s_width = 200
 rightSideFrame = tkinter.Frame(main, bg = themeColor)
 rightSideFrame.pack(side = tkinter.RIGHT, fill = tkinter.Y)
 
-canvasLabel = tkinter.Label(rightSideFrame, bg = themeColor, fg = userColor, font = 24, text = "Current Date")
+canvasLabel = tkinter.Label(rightSideFrame, bg = themeColor, fg = systemColor, font = 24, text = "Current Date")
 canvasLabel.pack(side = tkinter.TOP, fill = tkinter.X)
 
 # kenar alani (tuslarin alani)
@@ -552,7 +556,7 @@ removeItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, 
 removeItemButton.pack(side = tkinter.TOP)
 
 # degeri gösterecek olan alan 
-valueLabel = tkinter.Label(titleFrame, bg = themeColor, fg = userColor, font = 18, text = valueText.get())
+valueLabel = tkinter.Label(titleFrame, bg = themeColor, fg = systemColor, font = 18, text = valueText.get())
 valueLabel.pack()
 
 # baslat tusu
