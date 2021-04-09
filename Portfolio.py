@@ -155,6 +155,7 @@ def PrepareGraph():
 
     figure.clear()
     ax = figure.add_subplot(111)
+    ax.set_facecolor(themeColor)
     df = df[['Dates', 'Values']].groupby('Dates').sum()
     df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
     ax.set_title('Values')
@@ -562,7 +563,11 @@ StartButton.pack(side = tkinter.TOP)
 canvas = tkinter.Canvas(rightSideFrame, bg = themeColor, height = 500, width = 800)
 canvas.pack()
 
-figure = plt.Figure(figsize=(5,4), dpi=100)
+figure = plt.Figure(figsize=(5,4), dpi=100, facecolor = themeColor)
+
+#rect = figure.patch
+#rect.set_facecolor(themeColor)
+
 #ax = figure.add_subplot(111)
 line = FigureCanvasTkAgg(figure, canvas)
 line.get_tk_widget().pack()

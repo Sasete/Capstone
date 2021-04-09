@@ -148,6 +148,9 @@ def PrepareGraph():
 
     figure.clear()
     ax = figure.add_subplot(111)
+
+    ax.set_facecolor(themeColor)
+    
     df = df[['Dates', 'Values']].groupby('Dates').sum()
     df.plot(kind='line', legend=True, ax=ax,color='r',marker='o',fontsize=10)
     ax.set_title('Values')
@@ -251,7 +254,7 @@ canvas.pack()
 
 #print(fileName)
 
-figure = plt.Figure(figsize=(5,4), dpi=100)
+figure = plt.Figure(figsize=(5,4), dpi=100,facecolor = themeColor)
 #ax = figure.add_subplot(111)
 line = FigureCanvasTkAgg(figure, canvas)
 line.get_tk_widget().pack()
