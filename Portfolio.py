@@ -28,12 +28,12 @@ stockUpdate = True
 
 def Start():
 
-    #stockUpdate = True
-    #stockUpdater = threading.Thread(target = UpdateAllStocks)
+    stockUpdate = True
+    stockUpdater = threading.Thread(target = UpdateAllStocks)
 
-    #stockUpdater.start()
+    stockUpdater.start()
 
-    UpdateAllStocks()
+    #UpdateAllStocks()
     
     NewFile()
 
@@ -58,9 +58,8 @@ def UpdateAllStocks():
 
             print(stock)
         
-            #PullStock(stock)
+            PullStock(stock)
 
-        return None
         waitTime = 600
         debug = 'Waiting for ' + str(waitTime) + ' seconds.'
         print(debug)
@@ -374,6 +373,9 @@ def PullStock(stockName):
         if len(stockData.head().index) > 0:
         
             stock = Stocker.Stock(stockName)
+
+            stock.Initialize()
+            stock.name = stockName
     
             for i in range(len(stockData)):
 
