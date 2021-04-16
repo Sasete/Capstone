@@ -58,7 +58,7 @@ def UpdateAllStocks():
 
             print(stock)
         
-            PullStock(stock)
+            #PullStock(stock)
 
         return None
         waitTime = 600
@@ -313,15 +313,15 @@ def AddItem():
 
     portfolio.AddStock(stockData)
 
-    date = datetime.datetime.now()
+    #date = datetime.datetime.now()
 
-    dateString = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2) + '-' + str(date.hour).zfill(2) + '-' + str(date.minute).zfill(2) + '-' + str(date.second).zfill(2)
+    #dateString = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2) + '-' + str(date.hour).zfill(2) + '-' + str(date.minute).zfill(2) + '-' + str(date.second).zfill(2)
 
-    value = CalculateValueAsOne()
+    #value = CalculateValueAsOne()
 
-    valueData = Stocker.ValueData(dateString, float(value))
+    #valueData = Stocker.ValueData(dateString, float(value))
 
-    portfolio.AddValueData(valueData)
+    #portfolio.AddValueData(valueData)
 
     PortfolioToUI()
 
@@ -399,6 +399,8 @@ def PullStock(stockName):
                     #print(dat)
             
                     order += 1
+
+                #TODO RSI RS SHORT_AVG ve LONG_AVG kayıt etmemiz gerekiyor.
 
                 stringVal = stringVal[:-1]
 
@@ -522,16 +524,13 @@ def FunctionExit():
 
 def CheckFunction():
 
-    global functionThread
-    global killThread
-
-
-    
+    #global functionThread
+    #global killThread
 
 
 
-    killThread = True
-    functionThread.join()
+    #killThread = True
+    #functionThread.join()
     return
 
 # Tkinter arayüz kurulumu
