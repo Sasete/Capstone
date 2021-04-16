@@ -7,6 +7,8 @@ import requests, json
 from pandas import DataFrame
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import threading
+import os
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -17,10 +19,31 @@ portfolio = Stocker.Portfolio('')
 path = ''
 fileName = ''
 
+functionThread = ''
+killThread = False
+
 def Start():
+
+    TempAddAllStocks()
+
+    return None
 
     NewFile()
 
+def TempAddAllStocks():
+
+    stocks = Stocker.ReadFile('./Resources/StockList.txt')
+
+    for stock in stocks.split('\n'):
+
+
+        stock += '.is'
+
+        print(stock)
+        
+        PullStock(stock)
+
+    return None
 
 def NewFile():
 
@@ -311,8 +334,8 @@ def AddItem():
 
     global portfolio
     
-    
-    stockData = Stocker.StockData(item_name, 1)
+    # Add Amount is the second parameter.
+    stockData = Stocker.StockData(item_name, 0)
 
     portfolio.AddStock(stockData)
 
@@ -426,17 +449,64 @@ def StartCalculation():
 
     global isWorking
 
+    global functionThread
+
+    
+    global killThread
+
     # global deki isWorking degerini degistir arayüzü ona göre güncelle
     if isWorking:
+        
         isWorking = False
+        killThread = True
+        
+        functionThread.join()
+        
         StartButton.config(text = "Start")
+        
     else:
         isWorking = True
+        killThread = False
+
+        functionThread = threading.Thread(target = FunctionMain)
+
+
+        functionThread.start()
+        
         StartButton.config(text = "Stop")
 
+def FunctionStart():
 
+    print('Thread started.')
 
+    return None
 
+def FunctionMain():
+
+    counter = 0
+
+    FunctionStart()
+    
+    while True:
+
+        global killThread
+
+        if killThread:
+
+            FunctionExit()
+            
+            break
+
+        #main thread function here
+        print('Thread working...')
+
+    return None
+
+def FunctionExit():
+
+    print('Thread aborted.')
+    
+    return None
 
 
 # Tkinter arayüz kurulumu
@@ -473,9 +543,10 @@ fileMenu.add_command(label = "Save as", command = SaveAsFile)
 
 
 editMenu = tkinter.Menu(Menu, tearoff = 0)
-Menu.add_cascade(label = "Edit", menu = editMenu)
-#editMenu.add_command(label = "")
-#editMenu.add_command(label = "")
+Menu.add_cascade(label = "Portfolio", menu = editMenu)
+editMenu.add_command(label = "Low Risk Suggestion")
+editMenu.add_command(label = "Medium Risk Suggestion")
+editMenu.add_command(label = "High Risk Suggestion")
 #editMenu.add_separator()   #cizgi olusturuyor
 #editMenu.add_command(label = "")
 

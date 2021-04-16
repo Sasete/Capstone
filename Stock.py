@@ -107,6 +107,7 @@ def StockToUI():
 
     global stock
 
+    main.title(stock.name);
 
     stringVar = 'Name:\t ' + stock.name + '\n' + '\n'
     stringVar += 'Date:\t ' + stock.stockDates[len(stock.stockDates) - 1].date + '\n' + '\n'
@@ -146,12 +147,12 @@ def PrepareGraph():
 
     for value in stock.stockDates:
 
-        #Hangi infonun baz alınacagı secilmeli...
         date = datetime.datetime.strptime(value.date,'%Y-%m-%d')
 
         graphName = value.infos[graphState].name
 
         dates.append(date)
+        print('Value: ' + value.infos[graphState].info)
         values.append(float(value.infos[graphState].info))
 
 
