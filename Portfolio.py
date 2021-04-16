@@ -2,6 +2,7 @@ import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
 import datetime
+import time
 import yfinance as yf
 import requests, json
 from pandas import DataFrame
@@ -22,26 +23,48 @@ fileName = ''
 functionThread = ''
 killThread = False
 
+stockUpdater = ''
+stockUpdate = True
+
 def Start():
 
-    TempAddAllStocks()
+    #stockUpdate = True
+    #stockUpdater = threading.Thread(target = UpdateAllStocks)
 
-    return None
+    #stockUpdater.start()
 
+    UpdateAllStocks()
+    
     NewFile()
 
-def TempAddAllStocks():
+def UpdateAllStocks():
 
-    stocks = Stocker.ReadFile('./Resources/StockList.txt')
+    global stockUpdater
+    global stockUpdate
 
-    for stock in stocks.split('\n'):
+    while True:
 
-
-        stock += '.is'
-
-        print(stock)
+        if stockUpdate == False:
+            stockUpdater.join()
+            break
         
-        PullStock(stock)
+            
+
+        stocks = Stocker.ReadFile('./Resources/StockList.txt')
+
+        newStocks = ''
+
+        for stock in stocks.split('\n'):
+
+            print(stock)
+        
+            PullStock(stock)
+
+        return None
+        waitTime = 600
+        debug = 'Waiting for ' + str(waitTime) + ' seconds.'
+        print(debug)
+        time.sleep(waitTime)
 
     return None
 
@@ -101,11 +124,6 @@ def OpenFile():
 
 def SaveFile():
 
-#    print("Saved File!")
-
-#    return
-
-    # TODO SHOULD SAVE FILE
 
     global path
     global fileName
@@ -119,7 +137,6 @@ def SaveAsFile():
     
     filetypes = [ ('Portfolio Files', '*.portfolio') ]
     
-    # TODO SHOULD SAVE FILE
     path = tkinter.filedialog.asksaveasfile(mode='w', title = "Save File", initialdir = './', defaultextension=".portfolio", filetypes = filetypes)
 
     if path is None: # asksaveasfile return `None` if dialog closed with "cancel".
@@ -153,7 +170,7 @@ def PortfolioToUI():
 
     money = "{:.2f}".format(portfolio.money)
     
-    stringValue = str(money) + '$ money + ' + str(value) + '$ stocks'
+    stringValue = str(money) + '₺ money + ' + str(value) + '₺ stocks'
 
     valueLabel.config(text = stringValue)
 
@@ -289,49 +306,6 @@ def AddItem():
         print('Stock is already exist...')
         
         return
-
-    print(stockInfo)
-
-    stock = Stocker.Stock(item_name)
-    
-    for i in range(len(stockInfo)):
-
-        column = stockInfo.iloc[i,]
-
-
-
-        date = str(column).split('Name:')[1].split(' ')[1]
-
-        print("DATE" + date)
-
-        stringVal = date + ":"
-
-        order = 0
-        for dat in stockInfo.iloc[i]:
-
-            data = str(column).split('\n')[order].split(' ')[0]
-            
-            print("DATA" + data)
-            
-            stringVal += "\"" + data + "\"" + str(dat) + ","
-
-            print(dat)
-            
-            order += 1
-
-        stringVal = stringVal[:-1]
-
-        stockDate = Stocker.StockDateData()
-        stockDate.Read(stringVal)
-
-        stock.AddStockDate(stockDate)
-        
-                
-        
-    stock.Save('./Resources/Stocks/')
-
-
-
     global portfolio
     
     # Add Amount is the second parameter.
@@ -399,7 +373,45 @@ def PullStock(stockName):
 
         if len(stockData.head().index) > 0:
         
-            return stockData
+            stock = Stocker.Stock(stockName)
+    
+            for i in range(len(stockData)):
+
+                column = stockData.iloc[i,]
+
+
+
+                date = str(column).split('Name:')[1].split(' ')[1]
+
+                #print("DATE" + date)
+
+                stringVal = date + ":"
+
+                order = 0
+                for dat in stockData.iloc[i]:
+
+                    data = str(column).split('\n')[order].split(' ')[0]
+            
+                    #print("DATA" + data)
+            
+                    stringVal += "\"" + data + "\"" + str(dat) + ","
+
+                    #print(dat)
+            
+                    order += 1
+
+                stringVal = stringVal[:-1]
+
+                stockDate = Stocker.StockDateData()
+                stockDate.Read(stringVal)
+
+                stock.AddStockDate(stockDate)
+        
+                
+        
+            stock.Save('./Resources/Stocks/')
+            
+            return stock
 
         else:
             
@@ -498,8 +510,8 @@ def FunctionMain():
             break
 
         #main thread function here
-        print('Thread working...')
-
+        CheckFunction()
+        
     return None
 
 def FunctionExit():
@@ -508,6 +520,19 @@ def FunctionExit():
     
     return None
 
+def CheckFunction():
+
+    global functionThread
+    global killThread
+
+
+    
+
+
+
+    killThread = True
+    functionThread.join()
+    return
 
 # Tkinter arayüz kurulumu
 main = tkinter.Tk()
