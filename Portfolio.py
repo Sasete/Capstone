@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import os
+import numpy as np
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -350,82 +351,105 @@ def DoesStockExist():
 
 def PullStock(stockName):
 
-    try:
-        date = datetime.datetime.now()
+    #try:
+    date = datetime.datetime.now()
 
-        b = datetime.timedelta(days = 11)
-        a = datetime.timedelta(days = 1)
+
+    starty = 60
+
+    b = datetime.timedelta(days = starty)
+    a = datetime.timedelta(days = 1)
     
-        dateA = date - a
+
+    dateA = date - a
+    dateB = date - b
+
+    while np.busday_count(dateB.date(), dateA.date()) > 37:
+
+        print(np.busday_count(dateB.date(), dateA.date()))
+
+        starty -= 1
+
+        b = datetime.timedelta(days = starty)
+    
         dateB = date - b
-    
-        startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day)
 
-        endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day)
-    
-        stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
 
+    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day)
+
+    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day)
+    
+    stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
+
+    print(startDate + ':' + endDate + ':' + str(np.busday_count(dateB.date(), dateA.date())))
+
+    stockData.head()
+
+    if len(stockData.head().index) > 0:
         
+        stock = Stocker.Stock(stockName)
 
-
-        stockData.head()
-
-        if len(stockData.head().index) > 0:
-        
-            stock = Stocker.Stock(stockName)
-
-            stock.Initialize()
-            stock.name = stockName
+        stock.Initialize()
+        stock.name = stockName
     
-            for i in range(len(stockData)):
+        for i in range(len(stockData)):
 
-                column = stockData.iloc[i,]
-
-
-
+            column = stockData.iloc[i,]
+            
+            if i <= 26:
+                    
                 date = str(column).split('Name:')[1].split(' ')[1]
 
-                #print("DATE" + date)
+                print(date + ' passed!')
+    
+                continue
 
-                stringVal = date + ":"
 
-                order = 0
-                for dat in stockData.iloc[i]:
 
-                    data = str(column).split('\n')[order].split(' ')[0]
+
+            date = str(column).split('Name:')[1].split(' ')[1]
+
+            #print("DATE" + date)
+
+            stringVal = date + ":"
+
+            order = 0
+            for dat in stockData.iloc[i]:
+
+                data = str(column).split('\n')[order].split(' ')[0]
             
-                    #print("DATA" + data)
+                #print("DATA" + data)
             
-                    stringVal += "\"" + data + "\"" + str(dat) + ","
+                stringVal += "\"" + data + "\"" + str(dat) + ","
 
-                    #print(dat)
+                #print(dat)
             
-                    order += 1
+                order += 1
 
-                #TODO RSI RS SHORT_AVG ve LONG_AVG kayıt etmemiz gerekiyor.
+            #TODO RSI RS SHORT_AVG ve LONG_AVG kayıt etmemiz gerekiyor.
 
-                stringVal = stringVal[:-1]
+            stringVal = stringVal[:-1]
 
-                stockDate = Stocker.StockDateData()
-                stockDate.Read(stringVal)
+            stockDate = Stocker.StockDateData()
+            stockDate.Read(stringVal)
 
-                stock.AddStockDate(stockDate)
+            stock.AddStockDate(stockDate)
         
                 
         
-            stock.Save('./Resources/Stocks/')
+        stock.Save('./Resources/Stocks/')
             
-            return stock
+        return stock
 
-        else:
+    else:
             
-            print('Couldn\'t find stock...')
-            return None
-            
-    
-    except:
         print('Couldn\'t find stock...')
         return None
+            
+    
+    #except:
+        #print('Couldn\'t find stock...')
+        #return None
     
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
