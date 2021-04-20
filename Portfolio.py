@@ -61,6 +61,9 @@ def UpdateAllStocks():
         
             PullStock(stock)
 
+            return None
+
+
         waitTime = 600
         debug = 'Waiting for ' + str(waitTime) + ' seconds.'
         print(debug)
@@ -366,7 +369,7 @@ def PullStock(stockName):
 
     while np.busday_count(dateB.date(), dateA.date()) > 37:
 
-        print(np.busday_count(dateB.date(), dateA.date()))
+        #print(np.busday_count(dateB.date(), dateA.date()))
 
         starty -= 1
 
@@ -381,7 +384,7 @@ def PullStock(stockName):
     
     stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
 
-    print(startDate + ':' + endDate + ':' + str(np.busday_count(dateB.date(), dateA.date())))
+    #print(startDate + ':' + endDate + ':' + str(np.busday_count(dateB.date(), dateA.date())))
 
     stockData.head()
 
@@ -398,9 +401,9 @@ def PullStock(stockName):
             
             if i <= 26:
                     
-                date = str(column).split('Name:')[1].split(' ')[1]
+                #date = str(column).split('Name:')[1].split(' ')[1]
 
-                print(date + ' passed!')
+                #print(date + ' passed!')
     
                 continue
 
@@ -427,6 +430,24 @@ def PullStock(stockName):
                 order += 1
 
             #TODO RSI RS SHORT_AVG ve LONG_AVG kayıt etmemiz gerekiyor.
+
+            longList = stockData.iloc[i - 26: i]
+            shortList = stockData.iloc[i - 12: i]
+            rsList = stockData.iloc[i - 14: i]
+
+            short_avg = GetAverage(shortList, "Close")
+            long_avg = GetAverage(longList, "Close")
+            rsHigh_avg = GetAverage(rsList, "High")
+            rsLow_avg = GetAverage(rsList, "Low")
+
+            rs = rsHigh_avg / rsLow_avg
+
+            rsi = 100 - (100 / ( 1 + rs ))
+
+
+            stringVal += "\"LongAverage\"" + str(long_avg) + ","
+            stringVal += "\"ShortAverage\"" + str(short_avg) + ","
+            stringVal += "\"RSI\"" + str(rsi) + ","
 
             stringVal = stringVal[:-1]
 
@@ -514,6 +535,35 @@ def StartCalculation():
         functionThread.start()
         
         StartButton.config(text = "Stop")
+
+def GetAverage(values, dataType):
+
+    average = 0
+    count = 0
+
+    for i in range(len(values)):
+
+        column = values.iloc[i,]
+        
+        #date = str(column).split('Name:')[1].split(' ')[1]
+
+        order = 0
+        for dat in values.iloc[i]:
+
+            data = str(column).split('\n')[order].split(' ')[0]
+
+            if data == dataType:
+
+                average += dat
+
+                count += 1
+
+            
+            order += 1
+                
+
+
+    return average / count
 
 def FunctionStart():
 
