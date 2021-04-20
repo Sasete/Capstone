@@ -424,7 +424,14 @@ class StockDateData:
         stringVal = stringVal[:-1] + ';'
         
         return stringVal
-        
+
+    def GetInfo(self, name):
+
+        for info in self.infos:
+
+            if info.name == name:
+
+                return info
 
 # StockDateData daki info listteki datalar
 class DateInfo():

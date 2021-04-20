@@ -444,7 +444,6 @@ def PullStock(stockName):
 
             rsi = 100 - (100 / ( 1 + rs ))
 
-
             stringVal += "\"LongAverage\"" + str(long_avg) + ","
             stringVal += "\"ShortAverage\"" + str(short_avg) + ","
             stringVal += "\"RSI\"" + str(rsi) + ","
@@ -603,7 +602,7 @@ def CheckFunction():
     #global functionThread
     #global killThread
 
-
+    ## TODO MACD hesapla RSI a bak, ona göre al ya da sat!
 
     #killThread = True
     #functionThread.join()

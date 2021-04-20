@@ -120,6 +120,10 @@ def StockToUI():
             stringVar += data.name + ':\t ' + Stocker.HumanFormat(float(data.info)) + '\n' + '\n' 
             continue
 
+        if data.name == "RSI":
+            stringVar += data.name + ':\t ' + "{:.2f}".format(float(data.info)) + '%' + '\n' + '\n'
+            continue
+
         stringVar += data.name + ':\t ' + "{:.2f}".format(float(data.info)) + '₺' + '\n' + '\n' 
         
 
