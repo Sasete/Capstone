@@ -190,7 +190,7 @@ class Portfolio:
             for stockData in self.stockDatas:
 
         
-                stock = Stocker.Stock(stockData.name)
+                stock = Stock(stockData.name)
 
                 stock.Initialize()
 
@@ -198,7 +198,7 @@ class Portfolio:
 
                 stock.Load('./Resources/Stocks/')
 
-                stock.Print()
+                #stock.Print()
 
                 value += float(stock.stockDates[-1].GetInfo("Close").info) * stockData.amount
 
@@ -214,7 +214,7 @@ class Portfolio:
             for stockData in self.stockDatas:
 
         
-                stock = Stocker.Stock(stockData.name)
+                stock = Stock(stockData.name)
 
                 stock.Initialize()
 
@@ -222,7 +222,7 @@ class Portfolio:
 
                 stock.Load('./Resources/Stocks/')
 
-                stock.Print()
+                #stock.Print()
 
                 value += float(stock.stockDates[-1].GetInfo("Close").info) * stockData.amount
 
@@ -245,7 +245,17 @@ class Portfolio:
         self.valueDatas.append(valueData)
 
         self.date = date
-           
+
+    def Buy(self, stock, amount = 1):
+
+    
+
+        return None
+
+    def Sell(self, stock, amount = 1):
+
+
+        return None
 
 # stock sınıfı
 class Stock:
@@ -408,6 +418,21 @@ class Stock:
         stringVal = stringVal[:-1]
 
         print("line 254:" + stringVal)
+
+    def GetDate(self, date):
+
+        #print('Given Date: ' + date )
+
+        for stockDate in self.stockDates:
+
+            #print('Checked: ' + stockDate.date)
+
+            if stockDate.date == date:
+
+                return stockDate
+
+
+        print('404 Fatal Error! Date not found...')
 
 # stock data, portfolio da saklanacak olan stockData
 class StockData:

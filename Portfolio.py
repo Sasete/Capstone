@@ -89,7 +89,7 @@ def TimeCounter():
     
     while True:
 
-        time.sleep(1)
+        time.sleep(10)
 
         dateChanged = True
 
@@ -210,7 +210,7 @@ def PrepareGraph():
 
     for value in portfolio.valueDatas:
 
-        print(str(value.date) + ':' + str(value.value))
+        #print(str(value.date) + ':' + str(value.value))
 
         #date = datetime.datetime.strptime(value.date,'%Y-%m-%d-%H-%M-%S')
 
@@ -279,7 +279,7 @@ def CalculateValue():
 
         stock.Load('./Resources/Stocks/')
 
-        stock.Print()
+        #stock.Print()
 
         value += float(stock.stockDates[-1].infos[0].info) * stockData.amount
 
@@ -307,7 +307,7 @@ def CalculateValueAsOne():
 
         stock.Load('./Resources/Stocks/')
 
-        stock.Print()
+        #stock.Print()
 
         value += float(stock.stockDates[-1].infos[0].info) * stockData.amount
 
@@ -386,16 +386,20 @@ def DoesStockExist():
     return retVal
 
 
-def PullStock(stockName):
+def PullStock(stockName, daysBefore = 0):
+
+    global todayDate
+
+    #print(todayDate)
 
     #try:
-    date = datetime.datetime.now()
+    date = todayDate
 
 
     starty = 60
 
     b = datetime.timedelta(days = starty)
-    a = datetime.timedelta(days = 1)
+    a = datetime.timedelta(days = daysBefore)
     
 
     dateA = date - a
@@ -412,9 +416,9 @@ def PullStock(stockName):
         dateB = date - b
 
 
-    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day)
+    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day).zfill(2)
 
-    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day)
+    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day).zfill(2)
     
     stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
 
@@ -443,10 +447,10 @@ def PullStock(stockName):
 
 
 
-
+            
             date = str(column).split('Name:')[1].split(' ')[1]
 
-            #print("DATE" + date)
+            #print("Pulled Date: " + date)
 
             stringVal = date + ":"
 
@@ -634,32 +638,68 @@ def FunctionExit():
 
 def CheckFunction():
 
-    #global functionThread
-    #global killThread
     global dateChanged
     global todayDate
     global portfolio
 
     if dateChanged == True:
 
-        print('Date Changed!')
+        #print('Date Changed!')
 
         dateChanged = False
 
         todayDate = todayDate + datetime.timedelta(days = 1)
 
+        while not np.is_busday(todayDate.date()):
+            
+            todayDate = todayDate + datetime.timedelta(days = 1)
+
+
+
         date = str(todayDate.year) + '-' + str(todayDate.month).zfill(2) + '-' + str(todayDate.day).zfill(2)
 
         portfolio.SetDate(date)
 
+        CheckStocks()
+
         PortfolioToUI()
     
-    ## TODO MACD hesapla RSI a bak, ona göre al ya da sat!
-    
-
-    #killThread = True
-    #functionThread.join()
     return
+
+def CheckStocks():
+    
+    global portfolio
+    global todayDate
+    
+    for stockData in portfolio.stockDatas:
+        
+        stock = PullStock(stockData.name, -1)
+        #stock.Initialize()
+        #stock.name = stockData.name
+        #stock.Load('./Resources/Stocks/')
+
+
+        #stock.Print()
+
+        macd = float(stock.GetDate(portfolio.date).GetInfo('ShortAverage').info) - float(stock.GetDate(portfolio.date).GetInfo('LongAverage').info)
+
+        if macd > 0 and float(stock.GetDate(portfolio.date).GetInfo('RSI').info) < 30:
+
+            print(stock.name + ' bought!')
+
+            portfolio.Buy(stock)
+
+        if macd < 0 and float(stock.GetDate(portfolio.date).GetInfo('RSI').info) > 70:
+
+            print(stock.name + ' sold!')
+
+            portfolio.Sell(stock)
+
+        print(stock.name + ' waited!')            
+
+    return
+
+    
 
 # Tkinter arayüz kurulumu
 main = tkinter.Tk()
@@ -766,8 +806,13 @@ buttonFrame = tkinter.Frame(sideFrame, bg = themeColor, height = 80, width = s_w
 buttonFrame.pack(side = tkinter.TOP , fill = tkinter.X)
 
 
+
+def AddItemEvent(event):
+    AddItem()
+    
 # item ekleme tusu   
 addItemButton = tkinter.Button(sideFrame, bg = themeColor, fg = systemColor, text = "Add Item", font = 24, width = 15, height = 3, command = AddItem)
+addItemButton.bind("<Return>", AddItemEvent)
 addItemButton.pack(side = tkinter.TOP)
 
 # item düzenleme tusu   

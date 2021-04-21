@@ -5,6 +5,9 @@ import datetime
 from pandas import DataFrame
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import threading
+import time
+
 
 stock = Stocker.Stock('')
 
@@ -12,6 +15,8 @@ path = ''
 fileName = ''
 
 graphState = 0
+
+updaterThread = ''
 
 # degeri arayüz için alan fonksiyon
 def GetValue():
@@ -84,18 +89,41 @@ def Start():
 
     # global deki stock u kullanıcaz
     global stock
+    global fileName
+    global path
+    global updaterThread
+    
 
     # stock u yeni bir stock olarak oluştur
     stock = Stocker.Stock(stringValue)
 
+    path = './Resources/Stocks/'
+
     # stock u load et
-    stock.Load('./Resources/Stocks/')
+    stock.Load(path)
 
     # ./Temp.txt yi sil
     Stocker.RemoveFile('./Temp.txt')
 
     # Stock a göre arayüzü düzenle.
     StockToUI()
+
+    updaterThread = threading.Thread(target = Updater)
+    updaterThread.start()
+    
+
+def Updater():
+
+    global path
+    global fileName
+    global stock
+
+    while True:
+        stock.Load(path)
+
+        StockToUI()
+
+        time.sleep(5)
 
 def UIToStock():
 
@@ -149,6 +177,7 @@ def PrepareGraph():
 
     graphName = ''
 
+
     for value in stock.stockDates:
 
         date = datetime.datetime.strptime(value.date,'%Y-%m-%d')
@@ -158,6 +187,15 @@ def PrepareGraph():
         dates.append(date)
         print('Value: ' + value.infos[graphState].info)
         values.append(float(value.infos[graphState].info))
+
+    graphRange = 5
+
+    if len(dates) > graphRange:
+
+        length = len(dates)
+        
+        dates = dates[length - graphRange: length]
+        values = values[length - graphRange: length]
 
 
     data = {'Dates' : dates, 'Values' : values}
