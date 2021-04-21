@@ -114,16 +114,27 @@ def Start():
 
 def Updater():
 
-    global path
-    global fileName
-    global stock
 
-    while True:
-        stock.Load(path)
+    try:
+        
+        global path
+        global fileName
+        global stock
+    
+        while True:
 
-        StockToUI()
+            oldInfo = stock.GetTextToSave()
+        
+            stock.Load(path)
 
-        time.sleep(5)
+            if oldInfo != stock.GetTextToSave():        
+
+                StockToUI()
+
+            time.sleep(5)
+
+    except:
+        print('Thread end.')
 
 def UIToStock():
 
@@ -185,7 +196,7 @@ def PrepareGraph():
         graphName = value.infos[graphState].name
 
         dates.append(date)
-        print('Value: ' + value.infos[graphState].info)
+        #print('Value: ' + value.infos[graphState].info)
         values.append(float(value.infos[graphState].info))
 
     graphRange = 5

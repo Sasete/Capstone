@@ -364,7 +364,7 @@ class Stock:
                     
                 continue
 
-    def GetTextToSave():
+    def GetTextToSave(self):
 
         stringVal = self.name + "\n"
 
