@@ -179,7 +179,73 @@ class Portfolio:
 
                 order += 1
                 continue
-       
+
+    def GetValue(self, functionType = 0):
+
+        value = 0
+
+        if functionType == 0:
+    
+            order = 0
+            for stockData in self.stockDatas:
+
+        
+                stock = Stocker.Stock(stockData.name)
+
+                stock.Initialize()
+
+                stock.name = stockData.name
+
+                stock.Load('./Resources/Stocks/')
+
+                stock.Print()
+
+                value += float(stock.stockDates[-1].GetInfo("Close").info) * stockData.amount
+
+
+                order += 1
+
+            value += self.money
+
+
+        if functionType == 1:
+    
+            order = 0
+            for stockData in self.stockDatas:
+
+        
+                stock = Stocker.Stock(stockData.name)
+
+                stock.Initialize()
+
+                stock.name = stockData.name
+
+                stock.Load('./Resources/Stocks/')
+
+                stock.Print()
+
+                value += float(stock.stockDates[-1].GetInfo("Close").info) * stockData.amount
+
+
+                order += 1
+
+        if functionType == 2:
+
+            value += self.money
+
+
+        return value
+        
+
+
+    def SetDate(self, date):
+
+        valueData = ValueData(self.date, self.GetValue(0))
+
+        self.valueDatas.append(valueData)
+
+        self.date = date
+           
 
 # stock sınıfı
 class Stock:

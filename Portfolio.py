@@ -27,12 +27,23 @@ killThread = False
 stockUpdater = ''
 stockUpdate = True
 
+todayDate = datetime.datetime(2020,1,1)
+dateChanger = ''
+dateChanged = False
+
+
+
 def Start():
 
     stockUpdate = True
     stockUpdater = threading.Thread(target = UpdateAllStocks)
 
     stockUpdater.start()
+
+    dateChanged = False
+    dateChanger = threading.Thread(target = TimeCounter)
+
+    dateChanger.start()
 
     #UpdateAllStocks()
     
@@ -71,13 +82,28 @@ def UpdateAllStocks():
 
     return None
 
+def TimeCounter():
+
+
+    global dateChanged
+    
+    while True:
+
+        time.sleep(1)
+
+        dateChanged = True
+
+
+    return None
+
 def NewFile():
 
     global path
     global fileName
     global portfolio
+    global todayDate
 
-    date = datetime.datetime.now()
+    date = todayDate
 
     path = './'
     fileName = 'MyPortfolio'
@@ -85,14 +111,8 @@ def NewFile():
     
     portfolio.Initialize()
 
-    portfolio.date = str(date.year)
+    portfolio.date = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2)
     portfolio.money = 1000
-
-    dateString = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2) + '-' + str(date.hour).zfill(2) + '-' + str(date.minute).zfill(2) + '-' + str(date.second).zfill(2)
-
-    valueData = Stocker.ValueData(dateString, float(portfolio.money))
-    
-    portfolio.AddValueData(valueData)
 
     PortfolioToUI()
     
@@ -163,15 +183,15 @@ def PortfolioToUI():
 
     main.title(portfolio.name)
 
+    #dateText = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2)
+    
     canvasLabel.config(text = portfolio.date)
 
     GetPortfolioItems()
 
-    value = CalculateValue()
+    value = "{:.2f}".format(portfolio.GetValue(1))
 
-    value = "{:.2f}".format(value)
-
-    money = "{:.2f}".format(portfolio.money)
+    money = "{:.2f}".format(portfolio.GetValue(2))
     
     stringValue = str(money) + '₺ money + ' + str(value) + '₺ stocks'
 
@@ -192,10 +212,24 @@ def PrepareGraph():
 
         print(str(value.date) + ':' + str(value.value))
 
-        date = datetime.datetime.strptime(value.date,'%Y-%m-%d-%H-%M-%S')
+        #date = datetime.datetime.strptime(value.date,'%Y-%m-%d-%H-%M-%S')
+
+        date = datetime.datetime.strptime(value.date, '%Y-%m-%d')
         
         dates.append(date)
         values.append(value.value)
+
+    dates.append(portfolio.date)
+    values.append(portfolio.GetValue(0))
+
+    graphRange = 5
+
+    if len(dates) > graphRange:
+
+        length = len(dates)
+        
+        dates = dates[length - graphRange: length]
+        values = values[length - graphRange: length]
     
     data = {'Dates' : dates, 'Values' : values}
     df = DataFrame(data, columns = ['Dates', 'Values'])
@@ -504,6 +538,35 @@ def GetValue():
 
     return '0'
 
+def GetAverage(values, dataType):
+
+    average = 0
+    count = 0
+
+    for i in range(len(values)):
+
+        column = values.iloc[i,]
+        
+        #date = str(column).split('Name:')[1].split(' ')[1]
+
+        order = 0
+        for dat in values.iloc[i]:
+
+            data = str(column).split('\n')[order].split(' ')[0]
+
+            if data == dataType:
+
+                average += dat
+
+                count += 1
+
+            
+            order += 1
+                
+
+
+    return average / count
+
 # uygulamanýn alim satimini baslatan fonksiyon
 def StartCalculation():
 
@@ -535,34 +598,6 @@ def StartCalculation():
         
         StartButton.config(text = "Stop")
 
-def GetAverage(values, dataType):
-
-    average = 0
-    count = 0
-
-    for i in range(len(values)):
-
-        column = values.iloc[i,]
-        
-        #date = str(column).split('Name:')[1].split(' ')[1]
-
-        order = 0
-        for dat in values.iloc[i]:
-
-            data = str(column).split('\n')[order].split(' ')[0]
-
-            if data == dataType:
-
-                average += dat
-
-                count += 1
-
-            
-            order += 1
-                
-
-
-    return average / count
 
 def FunctionStart():
 
@@ -601,8 +636,26 @@ def CheckFunction():
 
     #global functionThread
     #global killThread
+    global dateChanged
+    global todayDate
+    global portfolio
 
+    if dateChanged == True:
+
+        print('Date Changed!')
+
+        dateChanged = False
+
+        todayDate = todayDate + datetime.timedelta(days = 1)
+
+        date = str(todayDate.year) + '-' + str(todayDate.month).zfill(2) + '-' + str(todayDate.day).zfill(2)
+
+        portfolio.SetDate(date)
+
+        PortfolioToUI()
+    
     ## TODO MACD hesapla RSI a bak, ona göre al ya da sat!
+    
 
     #killThread = True
     #functionThread.join()
