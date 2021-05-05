@@ -471,14 +471,14 @@ def PullStock(stockName, daysBefore = 0):
 
             longList = stockData.iloc[i - 26: i]
             shortList = stockData.iloc[i - 12: i]
-            rsList = stockData.iloc[i - 14: i]
+            rsList = stockData.iloc[i - 15: i]
 
             short_avg = GetAverage(shortList, "Close")
             long_avg = GetAverage(longList, "Close")
-            rsHigh_avg = GetAverage(rsList, "High")
-            rsLow_avg = GetAverage(rsList, "Low")
+            #rsHigh_avg = GetAverage(rsList, "High")
+            #rsLow_avg = GetAverage(rsList, "Low")
 
-            rs = rsHigh_avg / rsLow_avg
+            rs = GetRS(rsList)
 
             rsi = 100 - (100 / ( 1 + rs ))
 
@@ -570,6 +570,53 @@ def GetAverage(values, dataType):
 
 
     return average / count
+
+def GetRS(values):
+
+    closeList = []
+    rsList = []
+
+    for i in range(len(values)):
+
+        column = values.iloc[i,]
+
+        order = 0
+        for dat in values.iloc[i]:
+
+            data = str(column).split('\n')[order].split(' ')[0]
+
+            if data == "Close":
+                closeList.append(dat)
+    
+            
+            order += 1
+
+
+    upSum = 0
+    lowSum = 0
+        
+    for i in range(len(closeList)):
+
+        #print(closeList[i])
+
+        if i == 0:
+
+            continue
+
+        rs = closeList[i] - closeList[i - 1]
+
+        # Mutlak deger kodunu hatırlayamadım
+        if rs < 0:
+            lowSum += rs*-1
+        else:
+            upSum += rs
+            
+
+
+    rs = upSum / lowSum
+
+
+    return rs
 
 # uygulamanýn alim satimini baslatan fonksiyon
 def StartCalculation():
@@ -682,18 +729,25 @@ def CheckStocks():
         #stock.Print()
 
         macd = float(stock.GetDate(portfolio.date).GetInfo('ShortAverage').info) - float(stock.GetDate(portfolio.date).GetInfo('LongAverage').info)
+        rsi = float(stock.GetDate(portfolio.date).GetInfo('RSI').info)
+        
+        print('MacD: ' + str(macd) + '\nRSI: ' + str(rsi))
 
-        if macd > 0 and float(stock.GetDate(portfolio.date).GetInfo('RSI').info) < 30:
+        if macd > 0 and rsi < 30:
 
             print(stock.name + ' bought!')
 
             portfolio.Buy(stock)
 
-        if macd < 0 and float(stock.GetDate(portfolio.date).GetInfo('RSI').info) > 70:
+            return
+
+        if macd < 0 and rsi > 70:
 
             print(stock.name + ' sold!')
 
             portfolio.Sell(stock)
+
+            return
 
         print(stock.name + ' waited!')            
 
