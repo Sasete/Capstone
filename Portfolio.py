@@ -733,22 +733,22 @@ def CheckStocks():
         
         print('MacD: ' + str(macd) + '\nRSI: ' + str(rsi))
 
-        if macd > 0 and rsi < 30:
+        if macd > 0:
 
             print(stock.name + ' bought!')
 
             portfolio.Buy(stock)
 
-            return
+            continue
 
-        if macd < 0 and rsi > 70:
+        if macd < 0:
 
             print(stock.name + ' sold!')
 
             portfolio.Sell(stock)
 
-            return
-
+            continue
+        
         print(stock.name + ' waited!')            
 
     return

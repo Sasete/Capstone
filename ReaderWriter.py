@@ -248,11 +248,44 @@ class Portfolio:
 
     def Buy(self, stock, amount = 1):
 
-    
+        price = float(stock.GetDate(self.date).GetInfo('Close').info)
+
+        if self.money - amount * price < 0:
+
+            print('Not enough Money')
+
+            return
+            
+        self.money -= amount * price
+
+        for stocks in self.stockDatas:
+
+            if stocks.name == stock.name:
+
+                stocks.amount += amount
 
         return None
 
     def Sell(self, stock, amount = 1):
+
+        price = float(stock.GetDate(self.date).GetInfo('Close').info)            
+
+        for stocks in self.stockDatas:
+
+            if stocks.name == stock.name:
+
+                if stocks.amount - amount >= 0:
+
+                    stocks.amount -= amount
+                    
+                    self.money += amount * price
+
+                else:
+
+                    print('Not enough stock')
+
+                break
+        
 
 
         return None
