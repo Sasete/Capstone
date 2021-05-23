@@ -11,6 +11,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import os
 import numpy as np
+import pandas as pd
+import math
+import random
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -32,20 +35,17 @@ dateChanger = ''
 dateChanged = False
 
 
-
 def Start():
 
-    stockUpdate = True
-    stockUpdater = threading.Thread(target = UpdateAllStocks)
+    #stockUpdate = True
+    #stockUpdater = threading.Thread(target = UpdateAllStocks)
 
-    stockUpdater.start()
+    #stockUpdater.start()
 
     dateChanged = False
     dateChanger = threading.Thread(target = TimeCounter)
 
     dateChanger.start()
-
-    #UpdateAllStocks()
     
     NewFile()
 
@@ -66,13 +66,13 @@ def UpdateAllStocks():
 
         newStocks = ''
 
+        pullStocks = []
+
         for stock in stocks.split('\n'):
+            
+            pullStocks.append(stock)
 
-            print(stock)
-        
-            PullStock(stock)
-
-            return None
+        PullStocks(pullStocks)
 
 
         waitTime = 600
@@ -89,7 +89,7 @@ def TimeCounter():
     
     while True:
 
-        time.sleep(10)
+        time.sleep(5)
 
         dateChanged = True
 
@@ -364,6 +364,52 @@ def AddItem():
 
     #SaveFile()
 
+def AddStockItem(stockName):
+
+    item_name = stockName.upper()
+
+    print(item_name)
+    
+    if item_name == 'Item Shortcut' or item_name.isspace():
+
+        print('You need an item name')
+
+        return
+
+
+    stockInfo = PullStock(item_name)
+
+    if stockInfo is None:
+
+        return
+
+    if DoesStockExist():
+
+        print('Stock is already exist...')
+        
+        return
+    global portfolio
+    
+    # Add Amount is the second parameter.
+    stockData = Stocker.StockData(item_name, 0)
+
+    portfolio.AddStock(stockData)
+
+    #date = datetime.datetime.now()
+
+    #dateString = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2) + '-' + str(date.hour).zfill(2) + '-' + str(date.minute).zfill(2) + '-' + str(date.second).zfill(2)
+
+    #value = CalculateValueAsOne()
+
+    #valueData = Stocker.ValueData(dateString, float(value))
+
+    #portfolio.AddValueData(valueData)
+
+    PortfolioToUI()
+
+    #SaveFile()
+    
+
 def DoesStockExist():
 
     retVal = False
@@ -385,6 +431,137 @@ def DoesStockExist():
 
     return retVal
 
+def PullStocks(stockList, daysBefore = 0):
+
+    stockNames = ""
+
+    for stock in stockList:
+
+        stockNames += stock + " "
+
+
+    stockNames = stockNames[:-1]
+
+    global todayDate
+    date = todayDate
+
+    starty = 60
+    b = datetime.timedelta(days = starty)
+    a = datetime.timedelta(days = daysBefore)
+    
+    dateA = date - a
+    dateB = date - b
+
+    while np.busday_count(dateB.date(), dateA.date()) > 37:
+
+        #print(np.busday_count(dateB.date(), dateA.date()))
+
+        starty -= 1
+
+        b = datetime.timedelta(days = starty)
+    
+        dateB = date - b
+
+    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day).zfill(2)
+    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day).zfill(2)
+
+    stockData = yf.download(tickers = stockNames, start = startDate, end = endDate, progress = False)
+    #stockData.head()
+
+    #print(stockData)
+
+    stocks = []
+
+    for stock in stockList:
+
+        stockFrame = stockData.iloc[:, stockData.columns.get_level_values(1) == stock]
+
+        #print(stockFrame)
+
+        currentStock = Stocker.Stock(stock)
+        
+        currentStock.Initialize()
+        currentStock.name = stock
+
+
+        for i in range(len(stockFrame[:])):
+            
+            # First 26 value should be passed
+            if i <= 26:
+                continue
+        
+            stringVal = str(str(stockFrame.iloc[i].name).split(' ')[0]) + ":"
+
+
+            #stockDate = Stocker.StockDateData()
+
+            #stockDate.date = str(str(stockFrame.iloc[i].name).split(' ')[0])
+
+
+            for j in range(len(stockFrame.iloc[i][:])):
+
+
+                dataName = str(stockFrame.columns[j][0])
+                data = str(stockFrame.iloc[i][j])
+                #dateInfo = Stocker.DateInfo()
+
+                stringVal += "\"" + dataName + "\"" + data + ","
+                
+                #dateInfo.name = str(stockFrame.columns[j][0])
+                #dateInfo.info = str(stockFrame.iloc[i][j])
+
+                #stockDate.infos.append(dateInfo)
+
+
+            
+            longList = stockFrame.iloc[i - 26: i]
+            shortList = stockFrame.iloc[i - 12: i]
+            rsList = stockFrame.iloc[i - 15: i]
+            twentyList = stockFrame.iloc[i-20:i]
+        
+            
+            short_avg = GetAverage(shortList, "Close")
+            long_avg = GetAverage(longList, "Close")
+            twenty_avg = GetAverage(twentyList, "Close")
+            sigma = GetSigma(twentyList, "Close")
+            lowerBand, upperBand = (twenty_avg - (2 * sigma) , twenty_avg + (2 * sigma))
+
+            rs = GetRS(rsList)
+            rsi = 100 - (100 / ( 1 + rs ))
+
+            stringVal += "\"LongAverage\"" + str(long_avg) + ","
+            stringVal += "\"ShortAverage\"" + str(short_avg) + ","
+            stringVal += "\"TwentyAverage\"" + str(twenty_avg) + ","
+            stringVal += "\"Sigma\"" + str(sigma) + ","
+            stringVal += "\"UpperBand\"" + str(upperBand) + ","
+            stringVal += "\"LowerBand\"" + str(lowerBand) + ","
+            stringVal += "\"RSI\"" + str(rsi) + ","
+
+            stringVal = stringVal[:-1]
+
+            stockDate = Stocker.StockDateData()
+
+            #print(stringVal)
+            
+            stockDate.Read(stringVal)
+
+            #longInfo = Stocker.DateInfo("LongAverage", str(long_avg))
+            #shortInfo = Stocker.DateInfo("ShortAverage", str(short_avg))
+            #rsiInfo = Stocker.DateInfo("RSI", str(rsi))
+
+            #stockDate.infos.append(longInfo)
+            #stockDate.infos.append(shortInfo)
+            #stockDate.infos.append(rsiInfo)
+
+
+            currentStock.AddStockDate(stockDate)
+
+
+            
+        currentStock.Save('./Resources/Stocks/')
+
+        
+            
 
 def PullStock(stockName, daysBefore = 0):
 
@@ -417,14 +594,17 @@ def PullStock(stockName, daysBefore = 0):
 
 
     startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day).zfill(2)
-
     endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day).zfill(2)
-    
+
+    #stockData = yfTicker.history(start = startDate, end = endDate)
+
     stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
 
     #print(startDate + ':' + endDate + ':' + str(np.busday_count(dateB.date(), dateA.date())))
 
-    stockData.head()
+    #stockData.head()
+
+    #print(stockData)
 
     if len(stockData.head().index) > 0:
         
@@ -472,9 +652,13 @@ def PullStock(stockName, daysBefore = 0):
             longList = stockData.iloc[i - 26: i]
             shortList = stockData.iloc[i - 12: i]
             rsList = stockData.iloc[i - 15: i]
+            twentyList = stockData.iloc[i-20:i]
 
             short_avg = GetAverage(shortList, "Close")
             long_avg = GetAverage(longList, "Close")
+            twenty_avg = GetAverage(twentyList, "Close")
+            sigma = GetSigma(twentyList, "Close")
+            lowerBand, upperBand = (twenty_avg - (2 * sigma) , twenty_avg + (2 * sigma))
             #rsHigh_avg = GetAverage(rsList, "High")
             #rsLow_avg = GetAverage(rsList, "Low")
 
@@ -484,6 +668,10 @@ def PullStock(stockName, daysBefore = 0):
 
             stringVal += "\"LongAverage\"" + str(long_avg) + ","
             stringVal += "\"ShortAverage\"" + str(short_avg) + ","
+            stringVal += "\"TwentyAverage\"" + str(twenty_avg) + ","
+            stringVal += "\"Sigma\"" + str(sigma) + ","
+            stringVal += "\"UpperBand\"" + str(upperBand) + ","
+            stringVal += "\"LowerBand\"" + str(lowerBand) + ","
             stringVal += "\"RSI\"" + str(rsi) + ","
 
             stringVal = stringVal[:-1]
@@ -571,6 +759,60 @@ def GetAverage(values, dataType):
 
     return average / count
 
+def GetSigma(values, dataType):
+
+    average = 0
+    count = 0
+
+    for i in range(len(values)):
+
+        column = values.iloc[i,]
+        
+        #date = str(column).split('Name:')[1].split(' ')[1]
+
+        order = 0
+        for dat in values.iloc[i]:
+
+            data = str(column).split('\n')[order].split(' ')[0]
+
+            if data == dataType:
+
+                average += dat
+
+                count += 1
+
+            
+            order += 1
+                
+
+    average = average / count
+    
+    val = 0
+    for i in range(len(values)):
+
+        column = values.iloc[i,]
+
+        order = 0
+
+        for dat in values.iloc[i]:
+            data = str(column).split('\n')[order].split(' ')[0]
+
+
+            if data == dataType:
+
+                val += (dat - average) ** 2
+
+
+
+            order += 1
+
+    sigma = math.sqrt(val / count)
+
+    return sigma
+    
+
+    
+
 def GetRS(values):
 
     closeList = []
@@ -612,11 +854,27 @@ def GetRS(values):
             upSum += rs
             
 
-
-    rs = upSum / lowSum
+    try:
+        rs = upSum / lowSum
+    except:
+        rs = upSum / (lowSum + 1)
 
 
     return rs
+
+def BollingerBand(stock):
+
+    global portfolio
+
+    twentyAvg = float(stock.GetDate(portfolio.date).GetInfo('TwentyAverage').info)
+    
+    sigma = float(stock.GetDate(portfolio.date).GetInfo('Sigma').info)
+
+    upperBand = twentyAvg + (2 * sigma)
+    lowerBand = twentyAvg - (2 * sigma)
+
+
+    return (lowerBand, upperBand)
 
 # uygulamanýn alim satimini baslatan fonksiyon
 def StartCalculation():
@@ -649,6 +907,60 @@ def StartCalculation():
         
         StartButton.config(text = "Stop")
 
+def LowRiskSuggest():
+
+    global portfolio
+    itemList.delete(0, tkinter.END)
+
+    portfolio.stockDatas.clear()
+    
+    AddStockItem('ARCLK.is')
+    AddStockItem('YATAS.is')
+    AddStockItem('DOHOL.is')
+
+    return None
+
+def MediumRiskSuggest():
+
+    global portfolio
+    itemList.delete(0, tkinter.END)
+
+    portfolio.stockDatas.clear()
+    
+    AddStockItem('TUKAS.is')
+    AddStockItem('AEFES.is')
+    AddStockItem('KARSN.is')
+    
+
+    return None
+
+def HighRiskSuggest():
+
+    global portfolio
+    itemList.delete(0, tkinter.END)
+
+    portfolio.stockDatas.clear()
+    
+    stocks = Stocker.ReadFile('./Resources/StockList.txt')
+
+
+    poolStocks = []
+
+    for stock in stocks.split('\n'):
+            
+        poolStocks.append(stock)
+
+    stockNo1 = int(random.randint(0, len(poolStocks)))
+    stockNo2 = int(random.randint(0, len(poolStocks)))
+    stockNo3 = int(random.randint(0, len(poolStocks)))
+
+    AddStockItem(poolStocks[stockNo1])
+    AddStockItem(poolStocks[stockNo2])
+    AddStockItem(poolStocks[stockNo3])
+
+    print("HighRiskSuggest")
+
+    return None
 
 def FunctionStart():
 
@@ -707,49 +1019,81 @@ def CheckFunction():
 
         portfolio.SetDate(date)
 
-        CheckStocks()
+        stockDatas = []
+
+        for stockData in portfolio.stockDatas:
+
+            stockDatas.append(stockData.name)
+
+        PullStocks(stockDatas, -1)
+
+        for stockData in portfolio.stockDatas:
+
+            stock = Stocker.Stock(stockData.name)
+            stock.Initialize()
+            stock.name = stockData.name
+
+            stock.Load('./Resources/Stocks/')
+            
+            CheckStocks(stock)
 
         PortfolioToUI()
     
     return
 
-def CheckStocks():
+def CheckStocks(stock):
     
     global portfolio
     global todayDate
+
+    price = float(stock.GetDate(portfolio.date).GetInfo('Close').info)
+    macd = float(stock.GetDate(portfolio.date).GetInfo('ShortAverage').info) - float(stock.GetDate(portfolio.date).GetInfo('LongAverage').info)
+    rsi = float(stock.GetDate(portfolio.date).GetInfo('RSI').info)
+
+    lowerBand, upperBand = BollingerBand(stock)
+
+    bollingerValue = (price - lowerBand) / (upperBand - lowerBand)
+
+    print('MacD: ' + str(macd) + '\nRSI: ' + str(rsi) + '\nPrice: ' + str(price) + '\n(LowerBand: ' + str(lowerBand) + ",UpperBand:" + str(upperBand) + ")")
+    print('BollingerValue: ' + str(bollingerValue))
     
-    for stockData in portfolio.stockDatas:
+    if macd < 0 and rsi < 30:
+
+        if bollingerValue < 0.25:
+            
+            print(stock.name + ' bought x3!')
+
+            portfolio.Buy(stock, 3)
+
+            return
+
+            
+        print(stock.name + ' bought!')
+
+        portfolio.Buy(stock)
+
+        return
+    
+
+    if macd > 0 and rsi > 70:
+
+        if bollingerValue > 0.75:
+
+            print(stock.name + ' sold x3!')
+
+            portfolio.Sell(stock, 3)
+
+            return
+
+
+        print(stock.name + ' sold!')
+
+        portfolio.Sell(stock)
         
-        stock = PullStock(stockData.name, -1)
-        #stock.Initialize()
-        #stock.name = stockData.name
-        #stock.Load('./Resources/Stocks/')
 
-
-        #stock.Print()
-
-        macd = float(stock.GetDate(portfolio.date).GetInfo('ShortAverage').info) - float(stock.GetDate(portfolio.date).GetInfo('LongAverage').info)
-        rsi = float(stock.GetDate(portfolio.date).GetInfo('RSI').info)
+        return
         
-        print('MacD: ' + str(macd) + '\nRSI: ' + str(rsi))
-
-        if macd > 0:
-
-            print(stock.name + ' bought!')
-
-            portfolio.Buy(stock)
-
-            continue
-
-        if macd < 0:
-
-            print(stock.name + ' sold!')
-
-            portfolio.Sell(stock)
-
-            continue
-        
-        print(stock.name + ' waited!')            
+    print(stock.name + ' waited!')            
 
     return
 
@@ -790,9 +1134,9 @@ fileMenu.add_command(label = "Save as", command = SaveAsFile)
 
 editMenu = tkinter.Menu(Menu, tearoff = 0)
 Menu.add_cascade(label = "Portfolio", menu = editMenu)
-editMenu.add_command(label = "Low Risk Suggestion")
-editMenu.add_command(label = "Medium Risk Suggestion")
-editMenu.add_command(label = "High Risk Suggestion")
+editMenu.add_command(label = "Low Risk Suggestion", command = LowRiskSuggest)
+editMenu.add_command(label = "Medium Risk Suggestion", command = MediumRiskSuggest)
+editMenu.add_command(label = "High Risk Suggestion", command = HighRiskSuggest)
 #editMenu.add_separator()   #cizgi olusturuyor
 #editMenu.add_command(label = "")
 

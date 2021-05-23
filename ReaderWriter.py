@@ -274,15 +274,15 @@ class Portfolio:
 
             if stocks.name == stock.name:
 
-                if stocks.amount - amount >= 0:
+                #if stocks.amount - amount >= 0:
 
-                    stocks.amount -= amount
+                stocks.amount -= amount
                     
-                    self.money += amount * price
+                self.money += amount * price
 
-                else:
+                #else:
 
-                    print('Not enough stock')
+                    #print('Not enough stock')
 
                 break
         
@@ -306,6 +306,14 @@ class Stock:
 
         self.name = ""
         self.stockDates.clear()
+
+
+    def Set(self, targetStock):
+
+        self.name = targetStock.name
+
+        self.stockDates.clear()
+        self.stockDates.extend(targetStock.stockDates)
 
     # stock date i eklemek için olan fonksiyon
     def AddStockDate(self, stockDate):
@@ -459,7 +467,7 @@ class Stock:
         for stockDate in self.stockDates:
 
             #print('Checked: ' + stockDate.date)
-
+            
             if stockDate.date == date:
 
                 return stockDate
@@ -564,10 +572,10 @@ class DateInfo():
 
     info : str
 
-    def __init__(self):
+    def __init__(self, name = "", info = ""):
 
-        self.name = ""
-        self.info = ""
+        self.name = name
+        self.info = info
 
 
     def Initialize(self):
