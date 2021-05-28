@@ -54,7 +54,18 @@ class Portfolio:
 
                     self.stockDatas.remove(stockData)
 
-        return
+    def GetStock(self, stock):
+
+        for stockData in self.stockDatas:
+
+            if stockData is None:
+                continue
+
+            if stockData.name == stock.name:
+
+                return stockData
+
+        return None
     # Value bilgisini ekleyebilmek için
     def AddValueData(self, value):
 
@@ -289,6 +300,71 @@ class Portfolio:
 
 
         return None
+
+    def GetAmount(self, stock, buy = True):
+
+        currentStock = self.GetStock(stock)
+
+        if currentStock is None:
+            return 0
+
+        maxAmount = 1
+        minAmount = 1
+
+        if currentStock.amount > 0:
+
+            if buy == True:
+
+                maxAmount = (self.money / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                minAmount = 1
+                if maxAmount > 100:
+                    maxAmount = 100
+
+            else:
+
+                maxAmount = abs(currentStock.amount)
+                minAmount = 1
+
+        else:
+            
+            if currentStock.amount < 0:
+
+                if buy == True:
+
+                    maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    minAmount = abs(currentStock.amount)
+
+                else:
+
+                    maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    minAmount = 1
+
+                    if maxAmount > 50:
+                        maxAmount = 50
+                        
+            else:
+
+                if buy == True:
+
+                    maxAmount = (self.money / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    minAmount = 1
+                    if maxAmount > 100:
+                        maxAmount = 100
+                        
+                else:
+
+                    maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    minAmount = 1
+
+                    if maxAmount > 50:
+                        maxAmount = 50
+                        
+                
+
+
+        return (minAmount, maxAmount)
+
+            
 
 # stock sınıfı
 class Stock:

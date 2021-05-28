@@ -1,6 +1,7 @@
 import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
+from tkinter import simpledialog
 import datetime
 import time
 import yfinance as yf
@@ -38,10 +39,11 @@ pulling = False
 
 def Start():
 
+
     stockUpdate = True
     stockUpdater = threading.Thread(target=lambda: UpdateAllStocks())
 
-    stockUpdater.start()
+    #stockUpdater.start()
 
     dateChanged = False
     dateChanger = threading.Thread(target=lambda: TimeCounter())
@@ -112,14 +114,19 @@ def NewFile():
     date = todayDate
 
     path = './'
-    fileName = 'MyPortfolio'
+    fileName = simpledialog.askstring("Input", "Portfolio name:", parent = main)
 
     
     portfolio.Initialize()
 
     portfolio.date = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2)
-    portfolio.money = 1000
+    answer = simpledialog.askfloat("Input", "Start amount:", parent = main, minvalue=0.0)
 
+    if answer is not None:
+        portfolio.money = answer
+    else:
+        portfolio.money = 1000
+        
     PortfolioToUI()
     
 # dosya çalışmaları için fonksiyonlar oluşturuluyor
@@ -482,7 +489,7 @@ def PullStocks(stockList, daysBefore = 0):
     stockData = yf.download(tickers = stockNames, start = startDate, end = endDate, progress = False)
     downloadTime = time.monotonic()
 
-    print(stockData)
+    #print(stockData)
 
     print(str(len(stockList)) + "x stocks downloaded in " + str(downloadTime - startTime))
     #stockData.head()
@@ -495,11 +502,9 @@ def PullStocks(stockList, daysBefore = 0):
     
     for stock in stockList:
 
-        tS = time.monotonic()
         stockFrame = stockData.iloc[:, stockData.columns.get_level_values(1) == stock]
-        print("StockTime: " + str(time.monotonic() - tS))
 
-        print(stockFrame)
+        #print(stockFrame)
 
         currentStock = Stocker.Stock(stock)
         
@@ -544,14 +549,21 @@ def PullStocks(stockList, daysBefore = 0):
             twentyList = stockFrame.iloc[i-20:i]
         
             
+            tS = time.monotonic()
+            
             short_avg = GetAverage(shortList, "Close")
             long_avg = GetAverage(longList, "Close")
             twenty_avg = GetAverage(twentyList, "Close")
             sigma = GetSigma(twentyList, "Close")
             lowerBand, upperBand = (twenty_avg - (2 * sigma) , twenty_avg + (2 * sigma))
+            
 
             rs = GetRS(rsList)
-            rsi = 100 - (100 / ( 1 + rs ))
+            
+            #print("StockTime: " + str(time.monotonic() - tS))
+            
+            rsi = float(100 - (100 / ( 1 + rs )))
+            
 
             stringVal += "\"LongAverage\"" + str(long_avg) + ","
             stringVal += "\"ShortAverage\"" + str(short_avg) + ","
@@ -560,6 +572,7 @@ def PullStocks(stockList, daysBefore = 0):
             stringVal += "\"UpperBand\"" + str(upperBand) + ","
             stringVal += "\"LowerBand\"" + str(lowerBand) + ","
             stringVal += "\"RSI\"" + str(rsi) + ","
+            
 
             stringVal = stringVal[:-1]
 
@@ -712,7 +725,7 @@ def PullStock(stockName, daysBefore = 0):
 
             rs = GetRS(rsList)
 
-            rsi = 100 - (100 / ( 1 + rs ))
+            rsi = float(100 - (100 / ( 1 + rs )))
 
             stringVal += "\"LongAverage\"" + str(long_avg) + ","
             stringVal += "\"ShortAverage\"" + str(short_avg) + ","
@@ -784,113 +797,43 @@ def GetValue():
     return '0'
 
 def GetAverage(values, dataType):
+    
+    stockFrame = values.iloc[:, values.columns.get_level_values(0) == dataType]
 
-    average = 0
-    count = 0
-
-    for i in range(len(values)):
-
-        column = values.iloc[i,]
-        
-        #date = str(column).split('Name:')[1].split(' ')[1]
-
-        order = 0
-        for dat in values.iloc[i]:
-
-            data = str(column).split('\n')[order].split(' ')[0]
-
-            if data == dataType:
-
-                average += dat
-
-                count += 1
-
-            
-            order += 1
-                
-
-
-    return average / count
+    average = float(stockFrame[dataType].mean())
+    
+    return average
 
 def GetSigma(values, dataType):
-
-    average = 0
-    count = 0
-
-    for i in range(len(values)):
-
-        column = values.iloc[i,]
-        
-        #date = str(column).split('Name:')[1].split(' ')[1]
-
-        order = 0
-        for dat in values.iloc[i]:
-
-            data = str(column).split('\n')[order].split(' ')[0]
-
-            if data == dataType:
-
-                average += dat
-
-                count += 1
-
-            
-            order += 1
-
-
-    average = average / count
     
+    stockFrame = values.iloc[:, values.columns.get_level_values(0) == dataType]
+
+    average = float(stockFrame[dataType].mean())
+
+    count = float(stockFrame[dataType].count())
+
+    data = stockFrame[dataType].values
+
     val = 0
-    for i in range(len(values)):
+    for dat in data:
+        val += (dat - average) ** 2
 
-        column = values.iloc[i,]
-
-        order = 0
-
-        for dat in values.iloc[i]:
-            data = str(column).split('\n')[order].split(' ')[0]
-
-
-            if data == dataType:
-
-                val += (dat - average) ** 2
-
-
-
-            order += 1
-
-    sigma = math.sqrt(val / count)
+    if count >= 1:
+        sigma = math.sqrt(val / count)
+    else:
+        sigma = math.sqrt(val / 1)
 
     return sigma
     
 
-    
-
 def GetRS(values):
-
-    closeList = []
-    rsList = []
-
-    for i in range(len(values)):
-
-        column = values.iloc[i,]
-
-        order = 0
-        for dat in values.iloc[i]:
-
-            data = str(column).split('\n')[order].split(' ')[0]
-
-            if data == "Close":
-                closeList.append(dat)
     
-            
-            order += 1
-
+    data = values["Close"].values
 
     upSum = 0
     lowSum = 0
         
-    for i in range(len(closeList)):
+    for i in range(len(data)):
 
         #print(closeList[i])
 
@@ -898,18 +841,17 @@ def GetRS(values):
 
             continue
 
-        rs = closeList[i] - closeList[i - 1]
+        rs = data[i] - data[i - 1]
 
-        # Mutlak deger kodunu hatırlayamadım
         if rs < 0:
-            lowSum += rs*-1
+            lowSum += -rs
         else:
             upSum += rs
             
 
-    try:
+    if lowSum >= 1:
         rs = upSum / lowSum
-    except:
+    else:
         rs = upSum / (lowSum + 1)
 
 
@@ -1112,39 +1054,63 @@ def CheckStocks(stock):
     
     if macd < 0 and rsi < 30:
 
-        if bollingerValue < 0.25:
-            
-            print(stock.name + ' bought x3!')
+        #if bollingerValue <= 0.5:
 
-            portfolio.Buy(stock, 3)
+        bollingerRate = (bollingerValue - 0.5) / 0.5
 
-            return
+        if bollingerRate > 1:
+            bollingerRate = 1
 
-            
-        print(stock.name + ' bought!')
+        minAmount, maxAmount = portfolio.GetAmount(stock, True)
 
-        portfolio.Buy(stock)
+        amount =  int(round(maxAmount * bollingerRate))
+
+        if amount < minAmount:
+            amount = minAmount
+
+        portfolio.Buy(stock, amount)
+
+        print(stock.name + 'x' + str(amount) + ' bought')
 
         return
+
+            
+        #print(stock.name + ' bought!')
+
+        #portfolio.Buy(stock)
+
+        #return
     
 
     if macd > 0 and rsi > 70:
 
-        if bollingerValue > 0.75:
+        #if bollingerValue >= 0.5:
 
-            print(stock.name + ' sold x3!')
+        bollingerRate = (bollingerValue) / 0.5
 
-            portfolio.Sell(stock, 3)
+        if bollingerRate > 1:
+            bollingerRate = 1
 
-            return
+        minAmount, maxAmount = portfolio.GetAmount(stock, False)
 
+        amount = int(round(maxAmount * bollingerRate))
 
-        print(stock.name + ' sold!')
+        if amount < minAmount:
+            amount = minAmount
 
-        portfolio.Sell(stock)
-        
+        portfolio.Sell(stock, amount)
+
+        print(stock.name + 'x' + str(amount) + ' sold')
 
         return
+
+
+        #print(stock.name + ' sold!')
+
+        #portfolio.Sell(stock)
+        
+
+        #return
         
     print(stock.name + ' waited!')            
 
