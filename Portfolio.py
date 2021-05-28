@@ -34,16 +34,17 @@ todayDate = datetime.datetime(2020,1,1)
 dateChanger = ''
 dateChanged = False
 
+pulling = False
 
 def Start():
 
-    #stockUpdate = True
-    #stockUpdater = threading.Thread(target = UpdateAllStocks)
+    stockUpdate = True
+    stockUpdater = threading.Thread(target=lambda: UpdateAllStocks())
 
-    #stockUpdater.start()
+    stockUpdater.start()
 
     dateChanged = False
-    dateChanger = threading.Thread(target = TimeCounter)
+    dateChanger = threading.Thread(target=lambda: TimeCounter())
 
     dateChanger.start()
     
@@ -68,12 +69,17 @@ def UpdateAllStocks():
 
         pullStocks = []
 
+        startTime = time.monotonic()
         for stock in stocks.split('\n'):
-            
+
+            #PullStock(stock)
             pullStocks.append(stock)
 
         PullStocks(pullStocks)
+        
+        totalTime = time.monotonic() - startTime
 
+        print("Total elapsed time: " + str(totalTime))
 
         waitTime = 600
         debug = 'Waiting for ' + str(waitTime) + ' seconds.'
@@ -433,6 +439,13 @@ def DoesStockExist():
 
 def PullStocks(stockList, daysBefore = 0):
 
+    global pulling
+
+    if pulling == True:
+        return None
+
+    pulling = True
+    
     stockNames = ""
 
     for stock in stockList:
@@ -465,25 +478,36 @@ def PullStocks(stockList, daysBefore = 0):
     startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day).zfill(2)
     endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day).zfill(2)
 
+    startTime = time.monotonic()
     stockData = yf.download(tickers = stockNames, start = startDate, end = endDate, progress = False)
+    downloadTime = time.monotonic()
+
+    print(stockData)
+
+    print(str(len(stockList)) + "x stocks downloaded in " + str(downloadTime - startTime))
     #stockData.head()
 
     #print(stockData)
 
     stocks = []
 
+    elapseTime = downloadTime
+    
     for stock in stockList:
 
+        tS = time.monotonic()
         stockFrame = stockData.iloc[:, stockData.columns.get_level_values(1) == stock]
+        print("StockTime: " + str(time.monotonic() - tS))
 
-        #print(stockFrame)
+        print(stockFrame)
 
         currentStock = Stocker.Stock(stock)
         
         currentStock.Initialize()
         currentStock.name = stock
 
-
+        # Timer starts
+        
         for i in range(len(stockFrame[:])):
             
             # First 26 value should be passed
@@ -556,15 +580,33 @@ def PullStocks(stockList, daysBefore = 0):
 
             currentStock.AddStockDate(stockDate)
 
+        #timer ends
+        elapsedTime = time.monotonic()
+
+        passedTime = elapsedTime - elapseTime
+        elapseTime = elapsedTime
+        #timer starts again
+        
+        print(currentStock.name + ' prepared in ' + str(passedTime))
+
 
             
         currentStock.Save('./Resources/Stocks/')
+    print("Pull Success!")
 
+    pulling = False
         
             
 
 def PullStock(stockName, daysBefore = 0):
+    
+    global pulling
 
+    if pulling == True:
+        return None
+
+    pulling = True
+    
     global todayDate
 
     #print(todayDate)
@@ -598,7 +640,13 @@ def PullStock(stockName, daysBefore = 0):
 
     #stockData = yfTicker.history(start = startDate, end = endDate)
 
+    startTime = time.monotonic()
     stockData = yf.download(stockName, start = startDate, end = endDate, progress = False)
+    downloadTime = time.monotonic()
+
+    print(stockName + " downloaded in " + str(downloadTime - startTime))
+
+    
 
     #print(startDate + ':' + endDate + ':' + str(np.busday_count(dateB.date(), dateA.date())))
 
@@ -681,14 +729,19 @@ def PullStock(stockName, daysBefore = 0):
 
             stock.AddStockDate(stockDate)
         
-                
+
+        elapsedTime = time.monotonic()
+
+        print(stockName + " prepared in " + str(elapsedTime - downloadTime))
         
         stock.Save('./Resources/Stocks/')
-            
+        print("Pull Success!")
+        pulling = False
         return stock
 
     else:
             
+        pulling = False
         print('Couldn\'t find stock...')
         return None
             
@@ -783,7 +836,7 @@ def GetSigma(values, dataType):
 
             
             order += 1
-                
+
 
     average = average / count
     
