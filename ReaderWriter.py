@@ -551,6 +551,17 @@ class Stock:
 
         print('404 Fatal Error! Date not found...')
 
+    def GetInfos(self, info):
+
+        answer = []
+
+        for stockDate in self.stockDates:
+
+            answer.append(stockDate.GetInfo(info).info)
+
+
+        return answer
+
 # stock data, portfolio da saklanacak olan stockData
 class StockData:
 

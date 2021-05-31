@@ -2,6 +2,7 @@ import tkinter
 import ReaderWriter as Stocker
 from tkinter import filedialog
 from tkinter import simpledialog
+from tkinter import ttk
 import datetime
 import time
 import yfinance as yf
@@ -15,6 +16,7 @@ import numpy as np
 import pandas as pd
 import math
 import random
+from fiscalyear import *
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -31,7 +33,7 @@ killThread = False
 stockUpdater = ''
 stockUpdate = True
 
-todayDate = datetime.datetime(2020,1,1)
+todayDate = datetime.datetime(2021,1,1)
 dateChanger = ''
 dateChanged = False
 
@@ -762,6 +764,101 @@ def PullStock(stockName, daysBefore = 0):
     #except:
         #print('Couldn\'t find stock...')
         #return None
+
+
+def PullStocks4Matrix(stockList, daysBefore = 0):
+
+    global pulling
+
+    if pulling == True:
+        return None
+
+    pulling = True
+    
+    stockNames = ""
+
+    for stock in stockList:
+
+        stockNames += stock + " "
+
+
+    stockNames = stockNames[:-1]
+
+    global todayDate
+    date = todayDate
+
+    starty = 130
+    b = datetime.timedelta(days = starty)
+    a = datetime.timedelta(days = daysBefore)
+    
+    dateA = date - a
+    dateB = date - b
+
+    while np.busday_count(dateB.date(), dateA.date()) > 100:
+
+        #print(np.busday_count(dateB.date(), dateA.date()))
+
+        starty -= 1
+
+        b = datetime.timedelta(days = starty)
+    
+        dateB = date - b
+
+    startDate = str(dateB.year) + '-' + str(dateB.month).zfill(2) + '-' + str(dateB.day).zfill(2)
+    endDate = str(dateA.year) + '-' + str(dateA.month).zfill(2) + '-' + str(dateA.day).zfill(2)
+
+    startTime = time.monotonic()
+    stockData = yf.download(tickers = stockNames, start = startDate, end = endDate, progress = False, group_by = "ticker", threads = True)
+    downloadTime = time.monotonic()
+
+    print(stockData)
+
+    print(str(len(stockList)) + "x stocks downloaded in " + str(downloadTime - startTime))
+    #stockData.head()
+
+    #print(stockData
+    
+    elapseTime = downloadTime
+
+    lastDataFrame = DataFrame()
+
+    dataFrame = {}
+
+    dataFrame["index"] = stockData.index
+
+    for stock in stockList:
+
+
+        closeValues = stockData[stock]["Close"].values
+
+        cashFlow = [None] * len(closeValues)
+
+        for i in range(len(closeValues)):
+
+            if i == 0:
+
+                cashFlow[i] = 0
+
+                continue
+
+            cashFlow[i] = closeValues[i] - closeValues[i - 1]
+
+            
+        dataFrame[stock + " CashFlow"] = cashFlow
+        dataFrame[stock + " Value"] = closeValues
+
+
+    
+    lastDataFrame = pd.DataFrame.from_dict(dataFrame)
+
+    #pd.concat(dataFrames, axis = 1)
+    
+    print("Pull Success!")
+
+    pulling = False
+
+    return lastDataFrame
+            
     
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
@@ -871,6 +968,164 @@ def BollingerBand(stock):
 
     return (lowerBand, upperBand)
 
+
+def LowRiskSuggest():
+
+    stockNames = Stocker.ReadFile('./Resources/StockList.txt').split('\n')
+
+    startTime = time.monotonic()
+
+    dataFrame = PullStocks4Matrix(stockNames)
+        
+    totalTime = time.monotonic() - startTime
+
+    print(dataFrame)
+
+    markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
+
+    return
+
+    InitializeProgressBar()
+
+    global portfolio
+    itemList.delete(0, tkinter.END)
+
+    portfolio.stockDatas.clear()
+    
+    AddStockItem('ARCLK.is')
+    AddStockItem('YATAS.is')
+    AddStockItem('DOHOL.is')
+
+    return None
+
+def MediumRiskSuggest():
+
+    InitializeProgressBar()
+    
+    global portfolio
+    itemList.delete(0, tkinter.END)
+
+    portfolio.stockDatas.clear()
+    
+    AddStockItem('TUKAS.is')
+    AddStockItem('AEFES.is')
+    AddStockItem('KARSN.is')
+    
+
+    return None
+
+def HighRiskSuggest():
+
+    InitializeProgressBar()
+    
+    global portfolio
+    itemList.delete(0, tkinter.END)
+
+    portfolio.stockDatas.clear()
+    
+    stocks = Stocker.ReadFile('./Resources/StockList.txt')
+
+
+    poolStocks = []
+
+    for stock in stocks.split('\n'):
+            
+        poolStocks.append(stock)
+
+    stockNo1 = int(random.randint(0, len(poolStocks)))
+    stockNo2 = int(random.randint(0, len(poolStocks)))
+    stockNo3 = int(random.randint(0, len(poolStocks)))
+
+    AddStockItem(poolStocks[stockNo1])
+    AddStockItem(poolStocks[stockNo2])
+    AddStockItem(poolStocks[stockNo3])
+
+    print("HighRiskSuggest")
+
+    return None
+
+def InitializeProgressBar():
+
+    popup = tkinter.Toplevel()
+    tkinter.Label(popup, text = "Progressing").grid(row = 0, column = 0)
+
+
+    progress = 0
+    progress_var = tkinter.DoubleVar()
+    progress_bar = ttk.Progressbar(popup)
+
+    #TODO PROGRESSBAR
+
+    return None
+
+def GetMarkovitzMatrix(dataFrame, stockNames):
+
+    m = len(stockNames)
+
+    markovitzMatrix = [[0] * m] * m
+    
+    y = 0
+    for firstStock in stockNames:
+
+        x = 0
+        for secondStock in stockNames:
+
+            bothTop = 0
+            xTop = 0
+            yTop = 0
+            x2Top = 0
+            y2Top = 0
+            n = len(dataFrame["index"])
+
+            for date in range(len(dataFrame["index"])):
+
+
+                bothTop += (float(dataFrame[firstStock + " CashFlow"][date]) * float(dataFrame[secondStock + " CashFlow"][date]))
+
+                xTop += float(dataFrame[firstStock + " CashFlow"][date])
+                yTop += float(dataFrame[secondStock + " CashFlow"][date])
+
+                x2Top += float(dataFrame[firstStock + " CashFlow"][date]) ** 2
+                y2Top += float(dataFrame[secondStock + " CashFlow"][date]) ** 2
+
+
+            
+
+
+            r = ((n * bothTop) - (xTop * yTop)) / math.sqrt( ( (n * x2Top) - (xTop ** 2) ) * ( (n * y2Top) - (yTop ** 2) ) )
+
+            print( firstStock + 'x' + secondStock + ' R = ' + str(r))
+            
+            markovitzMatrix[x][y] = r
+
+            x += 1
+
+        y += 1
+    
+    # TODO HATA VAR
+    print(np.matrix(markovitzMatrix))
+
+    return markovitzMatrix
+    
+
+def Markovitz(state = "LowRisk"):
+
+    st = 0
+
+    if state == "LowRisk":
+        st = 0
+
+    if state == "MediumRisk":
+        st = 1
+
+    if state == "HighRisk":
+        st = 2
+
+
+
+
+    return None
+
 # uygulamanýn alim satimini baslatan fonksiyon
 def StartCalculation():
 
@@ -901,61 +1156,6 @@ def StartCalculation():
         functionThread.start()
         
         StartButton.config(text = "Stop")
-
-def LowRiskSuggest():
-
-    global portfolio
-    itemList.delete(0, tkinter.END)
-
-    portfolio.stockDatas.clear()
-    
-    AddStockItem('ARCLK.is')
-    AddStockItem('YATAS.is')
-    AddStockItem('DOHOL.is')
-
-    return None
-
-def MediumRiskSuggest():
-
-    global portfolio
-    itemList.delete(0, tkinter.END)
-
-    portfolio.stockDatas.clear()
-    
-    AddStockItem('TUKAS.is')
-    AddStockItem('AEFES.is')
-    AddStockItem('KARSN.is')
-    
-
-    return None
-
-def HighRiskSuggest():
-
-    global portfolio
-    itemList.delete(0, tkinter.END)
-
-    portfolio.stockDatas.clear()
-    
-    stocks = Stocker.ReadFile('./Resources/StockList.txt')
-
-
-    poolStocks = []
-
-    for stock in stocks.split('\n'):
-            
-        poolStocks.append(stock)
-
-    stockNo1 = int(random.randint(0, len(poolStocks)))
-    stockNo2 = int(random.randint(0, len(poolStocks)))
-    stockNo3 = int(random.randint(0, len(poolStocks)))
-
-    AddStockItem(poolStocks[stockNo1])
-    AddStockItem(poolStocks[stockNo2])
-    AddStockItem(poolStocks[stockNo3])
-
-    print("HighRiskSuggest")
-
-    return None
 
 def FunctionStart():
 
@@ -1088,8 +1288,10 @@ def CheckStocks(stock):
 
         bollingerRate = (bollingerValue) / 0.5
 
-        if bollingerRate > 1:
-            bollingerRate = 1
+        bollingerRate = bollingerRate ** -1
+
+        if bollingerRate < 0:
+            bollingerRate = 0
 
         minAmount, maxAmount = portfolio.GetAmount(stock, False)
 
@@ -1115,6 +1317,8 @@ def CheckStocks(stock):
     print(stock.name + ' waited!')            
 
     return
+
+
 
     
 
