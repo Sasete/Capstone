@@ -933,7 +933,33 @@ def GetMarkovitzMatrix(dataFrame, stockNames):
     print(dataFrame)
 
     return dataFrame
-    
+
+def Markovitz(markovitzMatrix ,state = "LowRisk", stockAmount = 3):
+
+    stocks = []
+
+    if state == "LowRisk":
+
+        stocks.append('ARCLK.IS')
+        stocks.append('DOHOL.IS')
+        stocks.append('YATAS.IS')
+
+    if state == "MediumRisk":
+
+        stocks.append('KARSN.IS')
+        stocks.append('AEFES.IS')
+        stocks.append('ALBRK.IS')
+
+    if state == "HighRisk":
+
+        stocks.append('BERA.IS')
+        stocks.append('BIMAS.IS')
+        stocks.append('BRISA.IS')
+
+
+
+
+    return stocks
     
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
@@ -1063,109 +1089,139 @@ def LowRiskSuggest():
 
     markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
 
+    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
 
-    UpdateProgressBar(67, 'Finalizing...')
+    UpdateProgressBar(67, 'Using Markovitz...')
 
-    time.sleep(1)
+    # stock_names = yeni alınacak olan stoklar
+    stock_names = Markovitz(markovitzMatrix, "LowRisk", stockAmount)
 
     UpdateProgressBar(100, 'Done')
 
     time.sleep(0.1)
+                                         
+    UpdateProgressBar(0, 'Adding Stocks...')
 
+                                         
+    order = 0
+    for stock_name in stock_names:
+
+        UpdateProgressBar( 100 * order / (len(stock_names)), stock_name)
+
+        AddStockItem(stock_name)
+
+        order += 1
+
+    
+    UpdateProgressBar(100, 'Done')
+
+    time.sleep(0.1)
+                                         
     EndProgressBar()
     
     return
 
-    global portfolio
-    itemList.delete(0, tkinter.END)
-
-    portfolio.stockDatas.clear()
-
-    UpdateProgressBar(0)
-    
-    AddStockItem('ARCLK.is')
-
-    UpdateProgressBar(33)
-    
-    AddStockItem('YATAS.is')
-
-    UpdateProgressBar( 67)
-    
-    AddStockItem('DOHOL.is')
-
-    UpdateProgressBar(100)
-
-    EndProgressBar()
-
-    return None
-
 def MediumRiskSuggest():
 
     InitializeProgressBar()
-    UpdateProgressBar(0, 'TUKAS.IS')
     
-    global portfolio
-    itemList.delete(0, tkinter.END)
+    UpdateProgressBar(0, 'Downloading...')
 
-    portfolio.stockDatas.clear()
-    
-    AddStockItem('TUKAS.is')
+    stockNames = Stocker.ReadFile('./Resources/StockList.txt').split('\n')
 
-    UpdateProgressBar(33, 'AEFES.IS')
-    
-    AddStockItem('AEFES.is')
+    startTime = time.monotonic()
 
-    UpdateProgressBar(67, 'KARSN.IS')
+    dataFrame = PullStocks4Matrix(stockNames)
+        
+    totalTime = time.monotonic() - startTime
     
-    AddStockItem('KARSN.is')
+    UpdateProgressBar(33, 'Net Cash Flow Matrix.')
+
+
+    markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
+
+    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+
+    UpdateProgressBar(67, 'Using Markovitz...')
+
+    # stock_names = yeni alınacak olan stoklar
+    stock_names = Markovitz(markovitzMatrix, "MediumRisk", stockAmount)
 
     UpdateProgressBar(100, 'Done!')
-    
+                                         
+    time.sleep(0.1)
+                                         
+    UpdateProgressBar(0, 'Adding Stocks...')
 
+                                         
+    order = 0
+    for stock_name in stock_names:
+
+        UpdateProgressBar( 100 * order / (len(stock_names)), stock_name)
+
+        AddStockItem(stock_name)
+
+        order += 1
+
+    
+    UpdateProgressBar(100, 'Done')
+
+    time.sleep(0.1)
+                                         
     EndProgressBar()
 
-    return None
+    return
 
 def HighRiskSuggest():
 
     InitializeProgressBar()
-    UpdateProgressBar(0)
     
-    global portfolio
-    itemList.delete(0, tkinter.END)
+    UpdateProgressBar(0, 'Downloading...')
 
-    portfolio.stockDatas.clear()
+    stockNames = Stocker.ReadFile('./Resources/StockList.txt').split('\n')
+
+    startTime = time.monotonic()
+
+    dataFrame = PullStocks4Matrix(stockNames)
+        
+    totalTime = time.monotonic() - startTime
     
-    stocks = Stocker.ReadFile('./Resources/StockList.txt')
+    UpdateProgressBar(33, 'Net Cash Flow Matrix.')
 
 
-    poolStocks = []
+    markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
 
-    for stock in stocks.split('\n'):
-            
-        poolStocks.append(stock)
+    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
 
-    stockNo1 = int(random.randint(0, len(poolStocks)))
-    stockNo2 = int(random.randint(0, len(poolStocks)))
-    stockNo3 = int(random.randint(0, len(poolStocks)))
+    UpdateProgressBar(67, 'Using Markovitz...')
 
-    AddStockItem(poolStocks[stockNo1])
+    # stock_names = yeni alınacak olan stoklar
+    stock_names = Markovitz(markovitzMatrix, "HighRisk", stockAmount)
 
-    UpdateProgressBar(33)
+    UpdateProgressBar(100, 'Done')
+
+    time.sleep(0.1)
+                                         
+    UpdateProgressBar(0, 'Adding Stocks...')
+
+                                         
+    order = 0
+    for stock_name in stock_names:
+
+        UpdateProgressBar( 100 * order / (len(stock_names)), stock_name)
+
+        AddStockItem(stock_name)
+
+        order += 1
+
     
-    AddStockItem(poolStocks[stockNo2])
+    UpdateProgressBar(100, 'Done')
 
-    UpdateProgressBar(67)
-    
-    AddStockItem(poolStocks[stockNo3])
-
-    UpdateProgressBar(100)
-
-    print("HighRiskSuggest")
-
+    time.sleep(0.1)
+                                         
     EndProgressBar()
 
-    return None
+    return
 
 def InitializeProgressBar(title = "Progressing",label = "Progressing"):
 
@@ -1207,23 +1263,6 @@ def EndProgressBar():
     return None
 
 
-def Markovitz(state = "LowRisk"):
-
-    st = 0
-
-    if state == "LowRisk":
-        st = 0
-
-    if state == "MediumRisk":
-        st = 1
-
-    if state == "HighRisk":
-        st = 2
-
-
-
-
-    return None
 
 # uygulamanýn alim satimini baslatan fonksiyon
 def StartCalculation():
