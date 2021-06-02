@@ -17,6 +17,7 @@ import pandas as pd
 import math
 import random
 from fiscalyear import *
+from itertools import combinations
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -934,9 +935,24 @@ def GetMarkovitzMatrix(dataFrame, stockNames):
 
     return dataFrame
 
-def Markovitz(markovitzMatrix ,state = "LowRisk", stockAmount = 3):
+def Markovitz(correlationMatrix ,state = "LowRisk", stockAmount = 3):
 
     stocks = []
+
+    print(correlationMatrix)
+
+    cc = list(combinations(correlationMatrix, 3))
+
+    # TODO ANLA TEKRAR YAZ
+    
+    dataFrame = pd.concat([correlationMatrix[c[1]].multiply(correlationMatrix[c[0]]) for c in cc], axis = 1, keys = cc)
+
+    #dataFrame.columns = dataFrame.columns.map(''.join)
+    
+    print(dataFrame)
+
+
+    # Kontrol kısmı
 
     if state == "LowRisk":
 
@@ -955,9 +971,7 @@ def Markovitz(markovitzMatrix ,state = "LowRisk", stockAmount = 3):
         stocks.append('BERA.IS')
         stocks.append('BIMAS.IS')
         stocks.append('BRISA.IS')
-
-
-
+        
 
     return stocks
     
@@ -1072,6 +1086,8 @@ def BollingerBand(stock):
 
 def LowRiskSuggest():
 
+    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+
     InitializeProgressBar()
     
     UpdateProgressBar(0, 'Downloading...')
@@ -1086,10 +1102,7 @@ def LowRiskSuggest():
     
     UpdateProgressBar(33, 'Net Cash Flow Matrix.')
 
-
-    markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
-
-    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+    markovitzMatrix = dataFrame.corr()
 
     UpdateProgressBar(67, 'Using Markovitz...')
 
@@ -1123,6 +1136,8 @@ def LowRiskSuggest():
 
 def MediumRiskSuggest():
 
+    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+
     InitializeProgressBar()
     
     UpdateProgressBar(0, 'Downloading...')
@@ -1137,10 +1152,7 @@ def MediumRiskSuggest():
     
     UpdateProgressBar(33, 'Net Cash Flow Matrix.')
 
-
-    markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
-
-    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+    markovitzMatrix = dataFrame.corr()
 
     UpdateProgressBar(67, 'Using Markovitz...')
 
@@ -1174,6 +1186,8 @@ def MediumRiskSuggest():
 
 def HighRiskSuggest():
 
+    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+
     InitializeProgressBar()
     
     UpdateProgressBar(0, 'Downloading...')
@@ -1188,10 +1202,7 @@ def HighRiskSuggest():
     
     UpdateProgressBar(33, 'Net Cash Flow Matrix.')
 
-
-    markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
-
-    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+    markovitzMatrix = dataFrame.corr()
 
     UpdateProgressBar(67, 'Using Markovitz...')
 
