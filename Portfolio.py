@@ -1046,6 +1046,7 @@ def RemoveItem():
     PortfolioToUI()
 
     #SaveFile()
+    
 
 # degeri arayüz için alan fonksiyon
 def GetValue():
@@ -1345,6 +1346,7 @@ def StartCalculation():
     global isWorking
 
     global functionThread
+    global portfolio
 
     
     global killThread
@@ -1358,6 +1360,17 @@ def StartCalculation():
         functionThread.join()
         
         StartButton.config(text = "Start")
+
+        stockDatas = []
+
+        stockDatas.extend(portfolio.stockDatas)
+
+        ClearItems()
+
+        for stock in stockDatas:
+
+            AddStockItem(stock.name)
+        
         
     else:
         isWorking = True
@@ -1477,7 +1490,7 @@ def CheckStocks(stock):
         if bollingerRate > 1:
             bollingerRate = 1
 
-        minAmount, maxAmount = portfolio.GetAmount(stock, True)
+        minAmount, maxAmount = portfolio.GetAmount(stock, False)
 
         print("(Min: " + str(minAmount) + ", Max: " + str(maxAmount) + ")" )
 
@@ -1486,9 +1499,9 @@ def CheckStocks(stock):
         if amount < minAmount:
             amount = minAmount
 
-        portfolio.Buy(stock, amount)
+        portfolio.Sell(stock, amount)
 
-        print(stock.name + 'x' + str(amount) + ' bought')
+        print(stock.name + 'x' + str(amount) + ' sold')
 
         return
 
@@ -1511,7 +1524,7 @@ def CheckStocks(stock):
         if bollingerRate < 0:
             bollingerRate = 0
 
-        minAmount, maxAmount = portfolio.GetAmount(stock, False)
+        minAmount, maxAmount = portfolio.GetAmount(stock, True)
 
         print("(Min: " + str(minAmount) + ", Max: " + str(maxAmount) + ")" )
 
@@ -1520,9 +1533,9 @@ def CheckStocks(stock):
         if amount < minAmount:
             amount = minAmount
 
-        portfolio.Sell(stock, amount)
+        portfolio.Buy(stock, amount)
 
-        print(stock.name + 'x' + str(amount) + ' sold')
+        print(stock.name + 'x' + str(amount) + ' bought')
 
         return
 
