@@ -40,6 +40,7 @@ dateChanged = False
 pulling = False
 
 progressBar = ''
+progressLabel = ''
 
 def Start():
 
@@ -813,7 +814,7 @@ def PullStocks4Matrix(stockList, daysBefore = 0):
     stockData = yf.download(tickers = stockNames, start = startDate, end = endDate, progress = False, group_by = "ticker", threads = True)
     downloadTime = time.monotonic()
 
-    print(stockData)
+    #print(stockData)
 
     print(str(len(stockList)) + "x stocks downloaded in " + str(downloadTime - startTime))
     #stockData.head()
@@ -826,8 +827,9 @@ def PullStocks4Matrix(stockList, daysBefore = 0):
 
     dataFrame = {}
 
-    dataFrame["index"] = stockData.index
+    #dataFrame["index"] = stockData.index
 
+    rate = 0
     for stock in stockList:
 
 
@@ -846,12 +848,18 @@ def PullStocks4Matrix(stockList, daysBefore = 0):
             cashFlow[i] = closeValues[i] - closeValues[i - 1]
 
             
-        dataFrame[stock + " CashFlow"] = cashFlow
-        dataFrame[stock + " Value"] = closeValues
+        dataFrame[stock] = cashFlow
+
+        rate += 1
+
+        UpdateProgressBar( 100 * (rate / len(stockList)) / 3, 'Pulling stock data...')
 
 
     
     lastDataFrame = pd.DataFrame.from_dict(dataFrame)
+    lastDataFrame.index = stockData.index
+
+    #print(lastDataFrame)
 
     #pd.concat(dataFrames, axis = 1)
     
@@ -860,7 +868,72 @@ def PullStocks4Matrix(stockList, daysBefore = 0):
     pulling = False
 
     return lastDataFrame
+
+def GetMarkovitzMatrix(dataFrame, stockNames):
+
+    m = len(stockNames)
+
+    markovitzMatrix = np.zeros((m, m))
+
+
+    rate = 0
+    
+    y = 0
+    for firstStock in stockNames:
+
+        x = 0
+        r = 0
+        for secondStock in stockNames:
+
+            bothTop = 0
+            xTop = 0
+            yTop = 0
+            x2Top = 0
+            y2Top = 0
+            n = len(dataFrame)
+
+
+            for date in range(len(dataFrame)):
+
+
+                bothTop += (float(dataFrame[firstStock][date]) * float(dataFrame[secondStock ][date]))
+
+                xTop += float(dataFrame[firstStock][date])
+                yTop += float(dataFrame[secondStock][date])
+
+                x2Top += float(dataFrame[firstStock][date]) ** 2
+                y2Top += float(dataFrame[secondStock][date]) ** 2
+
+
             
+
+
+            r = ((n * bothTop) - (xTop * yTop)) / math.sqrt( ( (n * x2Top) - (xTop ** 2) ) * ( (n * y2Top) - (yTop ** 2) ) )
+
+            #print( firstStock + 'x' + secondStock + ' R = ' + str(r))
+            
+            markovitzMatrix[x][y] = r
+
+            rate += 1
+
+
+            UpdateProgressBar( 33 + (100 * (rate / (len(stockNames) ** 2)) / 3), 'Calculating CashFlow Matrix...')
+            
+            x += 1
+
+        rate += 1
+        
+        UpdateProgressBar( 33 + (100 * (rate / (len(stockNames) ** 2)) / 3), 'Calculating CashFlow Matrix...')
+
+        y += 1
+        
+    dataFrame = DataFrame(markovitzMatrix, columns = stockNames)
+    dataFrame.index = stockNames
+
+    print(dataFrame)
+
+    return dataFrame
+    
     
 # listedeki seçili item in arayüzünü açacak fonksiyon
 def EditItem():
@@ -973,6 +1046,10 @@ def BollingerBand(stock):
 
 def LowRiskSuggest():
 
+    InitializeProgressBar()
+    
+    UpdateProgressBar(0, 'Downloading...')
+
     stockNames = Stocker.ReadFile('./Resources/StockList.txt').split('\n')
 
     startTime = time.monotonic()
@@ -980,29 +1057,52 @@ def LowRiskSuggest():
     dataFrame = PullStocks4Matrix(stockNames)
         
     totalTime = time.monotonic() - startTime
+    
+    UpdateProgressBar(33, 'Net Cash Flow Matrix.')
 
-    print(dataFrame)
 
     markovitzMatrix = GetMarkovitzMatrix(dataFrame, stockNames)
 
-    return
 
-    InitializeProgressBar()
+    UpdateProgressBar(67, 'Finalizing...')
+
+    time.sleep(1)
+
+    UpdateProgressBar(100, 'Done')
+
+    time.sleep(0.1)
+
+    EndProgressBar()
+    
+    return
 
     global portfolio
     itemList.delete(0, tkinter.END)
 
     portfolio.stockDatas.clear()
+
+    UpdateProgressBar(0)
     
     AddStockItem('ARCLK.is')
+
+    UpdateProgressBar(33)
+    
     AddStockItem('YATAS.is')
+
+    UpdateProgressBar( 67)
+    
     AddStockItem('DOHOL.is')
+
+    UpdateProgressBar(100)
+
+    EndProgressBar()
 
     return None
 
 def MediumRiskSuggest():
 
     InitializeProgressBar()
+    UpdateProgressBar(0, 'TUKAS.IS')
     
     global portfolio
     itemList.delete(0, tkinter.END)
@@ -1010,31 +1110,26 @@ def MediumRiskSuggest():
     portfolio.stockDatas.clear()
     
     AddStockItem('TUKAS.is')
-    AddStockItem('AEFES.is')
-    AddStockItem('KARSN.is')
+
+    UpdateProgressBar(33, 'AEFES.IS')
     
+    AddStockItem('AEFES.is')
+
+    UpdateProgressBar(67, 'KARSN.IS')
+    
+    AddStockItem('KARSN.is')
+
+    UpdateProgressBar(100, 'Done!')
+    
+
+    EndProgressBar()
 
     return None
 
 def HighRiskSuggest():
 
     InitializeProgressBar()
-    
-    rate = 0
-
-    
-    #end = False
-    #while not end:
-
-        #time.sleep(0.2)
-
-        #rate += 1
-
-        #UpdateProgressBar(rate)
-
-        #if rate == 100:
-            #end = True
-            #break
+    UpdateProgressBar(0)
     
     global portfolio
     itemList.delete(0, tkinter.END)
@@ -1075,13 +1170,15 @@ def HighRiskSuggest():
 def InitializeProgressBar(title = "Progressing",label = "Progressing"):
 
     global progressBar
+    global progressLabel
     global progress_var
     
     progressBar = tkinter.Toplevel()
     progressBar.title(title)
     progressBar.resizable(False,False)
-    tkinter.Label(progressBar, bg = themeColor, width = 30, height = 3, text = label, font = 24, justify = tkinter.CENTER).pack(side=tkinter.TOP, fill=tkinter.X)
-
+    
+    progressLabel = tkinter.Label(progressBar, bg = themeColor, width = 30, height = 3, text = label, font = 24, justify = tkinter.CENTER)
+    progressLabel.pack(side=tkinter.TOP, fill=tkinter.X)
 
     progress_bar = ttk.Progressbar(progressBar, variable=progress_var, maximum = 100)
     progress_bar.pack(side=tkinter.BOTTOM, expand = 1, fill=tkinter.X)
@@ -1089,12 +1186,14 @@ def InitializeProgressBar(title = "Progressing",label = "Progressing"):
 
     return None
 
-def UpdateProgressBar(rate):
+def UpdateProgressBar(rate, label = "Progress"):
 
     global progressBar
+    global progressLabel
     global progress_var
     
     progress_var.set(rate)
+    progressLabel.config(text = label)
     progressBar.update()
 
     return None
@@ -1107,55 +1206,6 @@ def EndProgressBar():
 
     return None
 
-def GetMarkovitzMatrix(dataFrame, stockNames):
-
-    m = len(stockNames)
-
-    markovitzMatrix = [[0] * m] * m
-    
-    y = 0
-    for firstStock in stockNames:
-
-        x = 0
-        for secondStock in stockNames:
-
-            bothTop = 0
-            xTop = 0
-            yTop = 0
-            x2Top = 0
-            y2Top = 0
-            n = len(dataFrame["index"])
-
-            for date in range(len(dataFrame["index"])):
-
-
-                bothTop += (float(dataFrame[firstStock + " CashFlow"][date]) * float(dataFrame[secondStock + " CashFlow"][date]))
-
-                xTop += float(dataFrame[firstStock + " CashFlow"][date])
-                yTop += float(dataFrame[secondStock + " CashFlow"][date])
-
-                x2Top += float(dataFrame[firstStock + " CashFlow"][date]) ** 2
-                y2Top += float(dataFrame[secondStock + " CashFlow"][date]) ** 2
-
-
-            
-
-
-            r = ((n * bothTop) - (xTop * yTop)) / math.sqrt( ( (n * x2Top) - (xTop ** 2) ) * ( (n * y2Top) - (yTop ** 2) ) )
-
-            print( firstStock + 'x' + secondStock + ' R = ' + str(r))
-            
-            markovitzMatrix[x][y] = r
-
-            x += 1
-
-        y += 1
-    
-    # TODO HATA VAR
-    print(np.matrix(markovitzMatrix))
-
-    return markovitzMatrix
-    
 
 def Markovitz(state = "LowRisk"):
 
