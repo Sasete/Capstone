@@ -696,6 +696,8 @@ def ReadFile(path):
 
     # TODO Data should be encoded here
 
+    file.close()
+
     return data
 
 # Dosyaya yazmak için

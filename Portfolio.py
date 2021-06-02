@@ -39,6 +39,8 @@ dateChanged = False
 
 pulling = False
 
+progressBar = ''
+
 def Start():
 
 
@@ -116,13 +118,13 @@ def NewFile():
     date = todayDate
 
     path = './'
-    fileName = simpledialog.askstring("Input", "Portfolio name:", parent = main)
+    fileName = simpledialog.askstring("Name", "Portfolio name:", parent = main)
 
     
     portfolio.Initialize()
 
     portfolio.date = str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2)
-    answer = simpledialog.askfloat("Input", "Start amount:", parent = main, minvalue=0.0)
+    answer = simpledialog.askfloat("Amount", "Start amount:", parent = main, minvalue=0.0)
 
     if answer is not None:
         portfolio.money = answer
@@ -1018,6 +1020,22 @@ def HighRiskSuggest():
 
     InitializeProgressBar()
     
+    rate = 0
+
+    
+    #end = False
+    #while not end:
+
+        #time.sleep(0.2)
+
+        #rate += 1
+
+        #UpdateProgressBar(rate)
+
+        #if rate == 100:
+            #end = True
+            #break
+    
     global portfolio
     itemList.delete(0, tkinter.END)
 
@@ -1037,24 +1055,55 @@ def HighRiskSuggest():
     stockNo3 = int(random.randint(0, len(poolStocks)))
 
     AddStockItem(poolStocks[stockNo1])
+
+    UpdateProgressBar(33)
+    
     AddStockItem(poolStocks[stockNo2])
+
+    UpdateProgressBar(67)
+    
     AddStockItem(poolStocks[stockNo3])
+
+    UpdateProgressBar(100)
 
     print("HighRiskSuggest")
 
+    EndProgressBar()
+
     return None
 
-def InitializeProgressBar():
+def InitializeProgressBar(title = "Progressing",label = "Progressing"):
 
-    popup = tkinter.Toplevel()
-    tkinter.Label(popup, text = "Progressing").grid(row = 0, column = 0)
+    global progressBar
+    global progress_var
+    
+    progressBar = tkinter.Toplevel()
+    progressBar.title(title)
+    progressBar.resizable(False,False)
+    tkinter.Label(progressBar, bg = themeColor, width = 30, height = 3, text = label, font = 24, justify = tkinter.CENTER).pack(side=tkinter.TOP, fill=tkinter.X)
 
 
-    progress = 0
-    progress_var = tkinter.DoubleVar()
-    progress_bar = ttk.Progressbar(popup)
+    progress_bar = ttk.Progressbar(progressBar, variable=progress_var, maximum = 100)
+    progress_bar.pack(side=tkinter.BOTTOM, expand = 1, fill=tkinter.X)
+    progressBar.pack_slaves()
 
-    #TODO PROGRESSBAR
+    return None
+
+def UpdateProgressBar(rate):
+
+    global progressBar
+    global progress_var
+    
+    progress_var.set(rate)
+    progressBar.update()
+
+    return None
+
+def EndProgressBar():
+
+    global progressBar
+
+    progressBar.destroy()
 
     return None
 
@@ -1418,6 +1467,9 @@ itemName.set('Item Shortcut')
 # deger gösterilmesi için veriye ataniyor
 valueText = tkinter.StringVar()
 valueText.set('Value: ' + GetValue())
+
+
+progress_var = tkinter.DoubleVar()
 
 # item adi girme kismi
 EntryField = tkinter.Entry(sideFrame, bg = themeColor, fg = userColor, font = 24, textvariable = itemName, justify = tkinter.CENTER)
