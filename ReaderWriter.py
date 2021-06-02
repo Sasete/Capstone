@@ -38,6 +38,16 @@ class Portfolio:
         self.stockDatas.append(stock)
 
         return
+
+    def ClearStockDatas(self):
+
+        self.money = self.GetValue()
+
+
+        self.stockDatas.clear()
+
+            
+    
     # Stock u kolayca silebilmek için
     def RemoveStock(self, stock):
 
@@ -315,7 +325,14 @@ class Portfolio:
 
             if buy == True:
 
-                maxAmount = (self.money / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                if float(stock.GetDate(self.date).GetInfo("Close").info) == 0:
+                    
+                    maxAmount = (self.money / len(self.stockDatas)) / 1
+
+                else:
+                    
+                    maxAmount = (self.money / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+
                 minAmount = 1
                 if maxAmount > 100:
                     maxAmount = 100
@@ -331,12 +348,21 @@ class Portfolio:
 
                 if buy == True:
 
-                    maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    if float(stock.GetDate(self.date).GetInfo("Close").info) == 0:
+                        maxAmount = (self.GetValue() / len(self.stockDatas)) / 1
+                        
+                    else:
+                        maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                        
                     minAmount = abs(currentStock.amount)
 
                 else:
 
-                    maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    if float(stock.GetDate(self.date).GetInfo("Close").info) == 0:
+                        maxAmount = (self.GetValue() / len(self.stockDatas)) / 1
+                             
+                    else:
+                        maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
                     minAmount = 1
 
                     if maxAmount > 50:
@@ -346,14 +372,26 @@ class Portfolio:
 
                 if buy == True:
 
-                    maxAmount = (self.money / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    if float(stock.GetDate(self.date).GetInfo("Close").info) == 0:
+                             maxAmount = (self.money / len(self.stockDatas)) / 1
+
+                    else:
+                        maxAmount = (self.money / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                        
                     minAmount = 1
                     if maxAmount > 100:
                         maxAmount = 100
                         
                 else:
 
-                    maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+                    if float(stock.GetDate(self.date).GetInfo("Close").info) == 0:
+
+                        maxAmount = (self.GetValue() / len(self.stockDatas)) / 1
+
+                    else:
+
+                        maxAmount = (self.GetValue() / len(self.stockDatas)) / float(stock.GetDate(self.date).GetInfo("Close").info)
+
                     minAmount = 1
 
                     if maxAmount > 50:
@@ -361,6 +399,11 @@ class Portfolio:
                         
                 
 
+        if maxAmount is None:
+            maxAmount = 0
+
+        if minAmount is None:
+            minAmount = 0
 
         return (minAmount, maxAmount)
 

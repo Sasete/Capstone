@@ -18,6 +18,7 @@ import math
 import random
 from fiscalyear import *
 from itertools import combinations
+import holidays
 
 # isWorking uygulamanin acik olma durumu
 isWorking = False
@@ -34,7 +35,7 @@ killThread = False
 stockUpdater = ''
 stockUpdate = True
 
-todayDate = datetime.datetime(2021,1,1)
+todayDate = datetime.datetime(2020,4,20)
 dateChanger = ''
 dateChanged = False
 
@@ -103,7 +104,7 @@ def TimeCounter():
     
     while True:
 
-        time.sleep(5)
+        time.sleep(2.5)
 
         dateChanged = True
 
@@ -540,6 +541,9 @@ def PullStocks(stockList, daysBefore = 0):
                 data = str(stockFrame.iloc[i][j])
                 #dateInfo = Stocker.DateInfo()
 
+                if data is None or data == 'nan':
+                    data = str(0)
+
                 stringVal += "\"" + dataName + "\"" + data + ","
                 
                 #dateInfo.name = str(stockFrame.columns[j][0])
@@ -707,8 +711,12 @@ def PullStock(stockName, daysBefore = 0):
                 data = str(column).split('\n')[order].split(' ')[0]
             
                 #print("DATA" + data)
+
+                if dat is None or dat == 'nan':
+                    stringVal += "\"" + data + "\"" + str(0) + ","
+                else:
             
-                stringVal += "\"" + data + "\"" + str(dat) + ","
+                    stringVal += "\"" + data + "\"" + str(dat) + ","
 
                 #print(dat)
             
@@ -931,7 +939,7 @@ def GetMarkovitzMatrix(dataFrame, stockNames):
     dataFrame = DataFrame(markovitzMatrix, columns = stockNames)
     dataFrame.index = stockNames
 
-    print(dataFrame)
+    #print(dataFrame)
 
     return dataFrame
 
@@ -939,39 +947,69 @@ def Markovitz(correlationMatrix ,state = "LowRisk", stockAmount = 3):
 
     stocks = []
 
-    print(correlationMatrix)
+    #print(correlationMatrix)
 
-    cc = list(combinations(correlationMatrix, 3))
+    combination = list(combinations(correlationMatrix, stockAmount))
 
-    # TODO ANLA TEKRAR YAZ
+
+    markovitzList = []
+
+    UpdateProgressBar(75, 'Calculating Combination...')
+
+    order = 0
+    for comb in combination:
+
+        combValue = (1 / 3) * correlationMatrix[comb[0]][comb[1]] * correlationMatrix[comb[0]][comb[2]] + (1 / 3) * correlationMatrix[comb[2]][comb[0]] * correlationMatrix[comb[2]][comb[1]] + (1 / 3) * correlationMatrix[comb[1]][comb[0]] * correlationMatrix[comb[1]][comb[2]]
+
+        markovitzList.append(combValue)
+
+        order += 1
+
+        rate = 100 * (order / len(combination))
+
+        UpdateProgressBar(75 + (rate / 4), 'Calculating Combination...')
+
+        
+
+    dataFrame = DataFrame(markovitzList, columns = ['Marko'])
+    dataFrame.index = combination
+
+    dataFrame = dataFrame.sort_values(by='Marko', ascending = True)
+
+    #print(dataFrame)
+
+
+    #print("Length: " + str(len(dataFrame)))
+
+
+    firstGroupLimit = math.floor(len(dataFrame) / 3)
+    secondGroupLimit = math.floor((len(dataFrame) * 2) / 3)
+
+    lowestOne = math.floor(firstGroupLimit / 2)
+    middleOne = math.floor(firstGroupLimit + ((secondGroupLimit - firstGroupLimit) / 2))
+    highestOne = math.floor(secondGroupLimit + ((len(dataFrame) - secondGroupLimit) / 2))
+    #print("LowestOne: " + str(lowestOne))
+    #print("MiddleOne: " + str(middleOne))
+    #print("HighestOne: " + str(highestOne))
     
-    dataFrame = pd.concat([correlationMatrix[c[1]].multiply(correlationMatrix[c[0]]) for c in cc], axis = 1, keys = cc)
-
-    #dataFrame.columns = dataFrame.columns.map(''.join)
-    
-    print(dataFrame)
-
-
-    # Kontrol kısmı
 
     if state == "LowRisk":
 
-        stocks.append('ARCLK.IS')
-        stocks.append('DOHOL.IS')
-        stocks.append('YATAS.IS')
+        stks = dataFrame.iloc[lowestOne].name
 
     if state == "MediumRisk":
 
-        stocks.append('KARSN.IS')
-        stocks.append('AEFES.IS')
-        stocks.append('ALBRK.IS')
+        stks = dataFrame.iloc[middleOne].name
 
     if state == "HighRisk":
 
-        stocks.append('BERA.IS')
-        stocks.append('BIMAS.IS')
-        stocks.append('BRISA.IS')
-        
+        stks = dataFrame.iloc[highestOne].name
+
+    stock0, stock1, stock2 = stks
+
+    stocks.append(stock0)
+    stocks.append(stock1)
+    stocks.append(stock2)
 
     return stocks
     
@@ -992,6 +1030,12 @@ def RemoveItem():
 
     stockName = stringValue.split('\t')[0]
     stockAmount = int(stringValue.split('\t')[1].split('x')[1])
+
+    if stockAmount != 0:
+
+        tkinter.messagebox.showwarning(title="Warning", message="You can't remove stock that exist in portfolio.")
+
+        return
     
     stockData = Stocker.StockData(stockName, stockAmount)
 
@@ -1086,9 +1130,11 @@ def BollingerBand(stock):
 
 def LowRiskSuggest():
 
-    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+    #stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
 
     InitializeProgressBar()
+
+    ClearItems()
     
     UpdateProgressBar(0, 'Downloading...')
 
@@ -1107,7 +1153,7 @@ def LowRiskSuggest():
     UpdateProgressBar(67, 'Using Markovitz...')
 
     # stock_names = yeni alınacak olan stoklar
-    stock_names = Markovitz(markovitzMatrix, "LowRisk", stockAmount)
+    stock_names = Markovitz(markovitzMatrix, "LowRisk")
 
     UpdateProgressBar(100, 'Done')
 
@@ -1136,9 +1182,11 @@ def LowRiskSuggest():
 
 def MediumRiskSuggest():
 
-    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+    #stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
 
     InitializeProgressBar()
+
+    ClearItems()
     
     UpdateProgressBar(0, 'Downloading...')
 
@@ -1157,7 +1205,7 @@ def MediumRiskSuggest():
     UpdateProgressBar(67, 'Using Markovitz...')
 
     # stock_names = yeni alınacak olan stoklar
-    stock_names = Markovitz(markovitzMatrix, "MediumRisk", stockAmount)
+    stock_names = Markovitz(markovitzMatrix, "MediumRisk")
 
     UpdateProgressBar(100, 'Done!')
                                          
@@ -1186,9 +1234,11 @@ def MediumRiskSuggest():
 
 def HighRiskSuggest():
 
-    stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
+    #stockAmount = simpledialog.askinteger("Amount", "Stock amount:", parent = main, minvalue=3, maxvalue=5)
 
     InitializeProgressBar()
+
+    ClearItems()
     
     UpdateProgressBar(0, 'Downloading...')
 
@@ -1207,7 +1257,7 @@ def HighRiskSuggest():
     UpdateProgressBar(67, 'Using Markovitz...')
 
     # stock_names = yeni alınacak olan stoklar
-    stock_names = Markovitz(markovitzMatrix, "HighRisk", stockAmount)
+    stock_names = Markovitz(markovitzMatrix, "HighRisk")
 
     UpdateProgressBar(100, 'Done')
 
@@ -1233,6 +1283,20 @@ def HighRiskSuggest():
     EndProgressBar()
 
     return
+
+
+def ClearItems():
+
+    global portfolio
+
+
+    itemList.delete(0, tkinter.END)
+    portfolio.ClearStockDatas()
+
+
+
+
+    return None
 
 def InitializeProgressBar(title = "Progressing",label = "Progressing"):
 
@@ -1353,10 +1417,13 @@ def CheckFunction():
 
         todayDate = todayDate + datetime.timedelta(days = 1)
 
-        while not np.is_busday(todayDate.date()):
+        #print('2020-04-23' in holidays.TR())
+
+        while not np.is_busday(todayDate.date()) or (todayDate.date() in holidays.TR()):
             
             todayDate = todayDate + datetime.timedelta(days = 1)
 
+        #print("Date passed: " + str(todayDate.date()))
 
 
         date = str(todayDate.year) + '-' + str(todayDate.month).zfill(2) + '-' + str(todayDate.day).zfill(2)
@@ -1412,6 +1479,8 @@ def CheckStocks(stock):
 
         minAmount, maxAmount = portfolio.GetAmount(stock, True)
 
+        print("(Min: " + str(minAmount) + ", Max: " + str(maxAmount) + ")" )
+
         amount =  int(round(maxAmount * bollingerRate))
 
         if amount < minAmount:
@@ -1443,6 +1512,8 @@ def CheckStocks(stock):
             bollingerRate = 0
 
         minAmount, maxAmount = portfolio.GetAmount(stock, False)
+
+        print("(Min: " + str(minAmount) + ", Max: " + str(maxAmount) + ")" )
 
         amount = int(round(maxAmount * bollingerRate))
 
